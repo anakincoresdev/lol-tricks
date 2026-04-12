@@ -1,5 +1,3 @@
-/* entities/player/model — типы и стор игроков */
-
 import type { RegionCode } from '~/src/shared/config'
 
 export interface Player {
@@ -13,3 +11,5 @@ export interface Player {
   mainChampionId: string
   mainChampionGamesPercent: number
 }
+
+export { MOCK_TOP_PLAYERS } from './mock-players'

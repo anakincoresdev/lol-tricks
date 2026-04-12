@@ -1,9 +1,2 @@
-/* entities/champion/model — типы и стор чемпионов */
-
-export interface Champion {
-  id: string
-  name: string
-  title: string
-  imageUrl: string
-  roles: string[]
-}
+export type { ChampionData } from './champions-data'
+export { CHAMPIONS } from './champions-data'

@@ -1,2 +1,2 @@
-/* shared/ui/index.ts — реэкспорт общих UI-компонентов */
-export {}
+export { default as SearchInput } from './SearchInput.vue'
+export { default as RoleFilter } from './RoleFilter.vue'

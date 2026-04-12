@@ -1,1 +1,3 @@
-export type { Champion } from './model'
+export type { ChampionData } from './model'
+export { CHAMPIONS } from './model'
+export { ChampionCard } from './ui'
