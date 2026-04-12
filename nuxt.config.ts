@@ -28,6 +28,12 @@ export default defineNuxtConfig({
     },
   },
 
+  css: ['~/src/app/styles/global.css'],
+
+  dir: {
+    layouts: 'src/app/layouts',
+  },
+
   ssr: false,
 
   nitro: {
