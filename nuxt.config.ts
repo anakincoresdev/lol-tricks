@@ -10,7 +10,6 @@ export default defineNuxtConfig({
   },
 
   app: {
-    baseURL: '/wallo-api/',
     head: {
       title: 'Wallo — Билды OTP игроков League of Legends',
       htmlAttrs: {
@@ -38,9 +37,7 @@ export default defineNuxtConfig({
     riotApiKey: process.env['RIOT_API_KEY'] ?? '',
   },
 
-  ssr: false,
-
   nitro: {
-    preset: 'github-pages',
+    preset: 'vercel',
   },
 })
