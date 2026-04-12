@@ -31,6 +31,7 @@
     <div class="home-page__container">
       <ChampionGrid />
       <TopPlayers :players="MOCK_TOP_PLAYERS" />
+      <OtpLeaderboard />
     </div>
   </div>
 </template>
@@ -43,6 +44,7 @@ import { CHAMPIONS } from '~/src/entities/champion'
 import { MOCK_TOP_PLAYERS } from '~/src/entities/player'
 import { ChampionGrid } from '~/src/widgets/champion-grid'
 import { TopPlayers } from '~/src/widgets/top-players'
+import { OtpLeaderboard } from '~/src/widgets/otp-leaderboard'
 
 useHead({
   title: `${APP_NAME} — Билды OTP игроков League of Legends`,

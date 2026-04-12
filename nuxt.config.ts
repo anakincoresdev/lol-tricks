@@ -34,6 +34,10 @@ export default defineNuxtConfig({
     layouts: 'src/app/layouts',
   },
 
+  runtimeConfig: {
+    riotApiKey: process.env['RIOT_API_KEY'] ?? '',
+  },
+
   ssr: false,
 
   nitro: {
