@@ -19,13 +19,19 @@ interface OtpPlayer {
   otpPercent: number
 }
 
-const OTP_THRESHOLD = 40 // Minimum % of games on one champion
+const OTP_THRESHOLD = 35 // Minimum % of games on one champion
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const region = (query['region'] as string) ?? 'euw'
   const tier = (query['tier'] as string) ?? 'challenger'
-  const limit = Math.min(Number(query['limit']) || 10, 25)
+  const limit = Math.min(Number(query['limit']) || 5, 10)
 
   const validTiers = ['challenger', 'grandmaster', 'master']
   if (!validTiers.includes(tier)) {
@@ -39,7 +45,7 @@ export default defineEventHandler(async (event) => {
   const platformHost = getPlatformHost(region)
   const regionalHost = getRegionalHost(region)
 
-  // 1. Get league entries
+  // 1. Get league entries (single API call)
   const league = await riotFetch<LeagueList>(
     platformHost,
     `/lol/league/v4/${tier}leagues/by-queue/RANKED_SOLO_5x5`,
@@ -50,25 +56,28 @@ export default defineEventHandler(async (event) => {
     .sort((a, b) => b.leaguePoints - a.leaguePoints)
     .slice(0, limit)
 
-  // 2. For each player, analyze their recent matches
+  // 2. Analyze players sequentially with rate-limit delays
   const otpPlayers: OtpPlayer[] = []
 
   for (const player of topPlayers) {
     try {
-      // Get recent match IDs (ranked solo queue = 420)
+      // Get recent 5 match IDs (smaller batch to stay within limits)
       const matchIds = await riotFetch<string[]>(
         regionalHost,
-        `/lol/match/v5/matches/by-puuid/${player.puuid}/ids?queue=420&count=20`,
+        `/lol/match/v5/matches/by-puuid/${player.puuid}/ids?queue=420&count=5`,
       )
 
       if (matchIds.length === 0) {
         continue
       }
 
-      // Fetch match details (limit to 10 to avoid rate limit)
+      // Small delay to respect rate limit
+      await delay(100)
+
+      // Fetch only 3 match details to stay fast
       const matchDetails = await Promise.all(
         matchIds
-          .slice(0, 10)
+          .slice(0, 3)
           .map((matchId) =>
             riotFetch<MatchDto>(
               regionalHost,
@@ -102,7 +111,7 @@ export default defineEventHandler(async (event) => {
       const totalGames = matchDetails.length
       const otpPercent = Math.round((maxGames / totalGames) * 100)
 
-      // Get player display name from match data
+      // Get player display name
       const firstMatch = matchDetails[0]
       const participantData = firstMatch?.info.participants.find(
         (p) => p.puuid === player.puuid,
@@ -112,31 +121,31 @@ export default defineEventHandler(async (event) => {
         participantData?.summonerName ??
         'Unknown'
 
-      if (otpPercent >= OTP_THRESHOLD) {
-        otpPlayers.push({
-          puuid: player.puuid,
-          gameName,
-          tier: league.tier,
-          lp: player.leaguePoints,
-          wins: player.wins,
-          losses: player.losses,
-          winRate: Math.round(
-            (player.wins / (player.wins + player.losses)) * 100,
-          ),
-          mainChampion,
-          mainChampionGames: maxGames,
-          totalGames,
-          otpPercent,
-        })
-      }
+      otpPlayers.push({
+        puuid: player.puuid,
+        gameName,
+        tier: league.tier,
+        lp: player.leaguePoints,
+        wins: player.wins,
+        losses: player.losses,
+        winRate: Math.round(
+          (player.wins / (player.wins + player.losses)) * 100,
+        ),
+        mainChampion,
+        mainChampionGames: maxGames,
+        totalGames,
+        otpPercent,
+      })
+
+      // Delay between players to avoid rate limit
+      await delay(200)
     } catch {
-      // Skip players that fail (rate limit, etc.)
       continue
     }
   }
 
-  // Sort by OTP percentage
-  otpPlayers.sort((a, b) => b.otpPercent - a.otpPercent)
+  // Sort: OTP first, then by LP
+  otpPlayers.sort((a, b) => b.otpPercent - a.otpPercent || b.lp - a.lp)
 
   return {
     region,

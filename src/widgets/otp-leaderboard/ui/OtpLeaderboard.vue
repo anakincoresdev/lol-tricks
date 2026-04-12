@@ -137,7 +137,7 @@ async function load(): Promise<void> {
       query: {
         region: selectedRegion.value,
         tier: selectedTier.value,
-        limit: 10,
+        limit: 5,
       },
     })
     data.value = response

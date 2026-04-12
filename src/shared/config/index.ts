@@ -1,4 +1,4 @@
-export const APP_NAME = 'Wallo'
+export const APP_NAME = 'LoL Tricks'
 
 export const APP_DESCRIPTION =
   'Билды, руны и предметы от лучших OTP игроков League of Legends'

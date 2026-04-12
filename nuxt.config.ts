@@ -11,7 +11,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Wallo — Билды OTP игроков League of Legends',
+      title: 'LoL Tricks — Билды OTP игроков League of Legends',
       htmlAttrs: {
         lang: 'ru',
       },
