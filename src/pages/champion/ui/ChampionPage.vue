@@ -162,6 +162,9 @@ const errorMessage = computed(() => {
   if (error.value.includes('429')) {
     return 'Превышен лимит запросов. Подожди немного и попробуй снова.'
   }
+  if (error.value.includes('504') || error.value.includes('timeout')) {
+    return 'Сервер не успел ответить. Попробуй другой регион или тир.'
+  }
   return `Ошибка: ${error.value}`
 })
 
@@ -182,8 +185,18 @@ async function loadPlayers(): Promise<void> {
     )
     players.value = response.players
   } catch (e: unknown) {
-    const err = e as { statusMessage?: string; message?: string }
-    error.value = err.statusMessage ?? err.message ?? 'Unknown error'
+    const err = e as {
+      data?: { statusMessage?: string; message?: string }
+      statusMessage?: string
+      message?: string
+      status?: number
+    }
+    error.value =
+      err.data?.statusMessage ??
+      err.data?.message ??
+      err.statusMessage ??
+      err.message ??
+      'Unknown error'
   } finally {
     loading.value = false
   }
