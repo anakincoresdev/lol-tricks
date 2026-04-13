@@ -136,7 +136,10 @@ export default defineEventHandler(async (event) => {
     250,
   )
 
-  // Filter players who have mastery on this champion
+  // Filter players who have meaningful mastery on this champion
+  // 10 000 mastery points ≈ 10+ games played
+  const MIN_MASTERY_POINTS = 10_000
+
   const matchedPlayers: {
     entry: (typeof topPlayers)[number]
     mastery: ChampionMasteryDto
@@ -145,7 +148,7 @@ export default defineEventHandler(async (event) => {
   for (let i = 0; i < topPlayers.length; i++) {
     const mastery = masteryResults[i]
     const entry = topPlayers[i]
-    if (entry && mastery && mastery.championPoints > 0) {
+    if (entry && mastery && mastery.championPoints >= MIN_MASTERY_POINTS) {
       matchedPlayers.push({ entry, mastery })
     }
   }
