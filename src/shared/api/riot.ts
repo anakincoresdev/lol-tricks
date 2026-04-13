@@ -53,9 +53,8 @@ export interface ChampionPlayer {
   wins: number
   losses: number
   winRate: number
-  gamesOnChampion: number
-  totalGames: number
-  championPercent: number
+  masteryPoints: number
+  masteryLevel: number
 }
 
 export interface ChampionPlayersResponse {

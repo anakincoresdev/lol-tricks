@@ -76,3 +76,11 @@ export interface AccountDto {
   gameName: string
   tagLine: string
 }
+
+export interface ChampionMasteryDto {
+  puuid: string
+  championId: number
+  championLevel: number
+  championPoints: number
+  lastPlayTime: number
+}
