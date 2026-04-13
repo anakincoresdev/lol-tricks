@@ -19,11 +19,7 @@
 <script setup lang="ts">
 import { APP_NAME } from '~/src/shared/config'
 
-const navLinks = [
-  { to: '/', label: 'Главная' },
-  { to: '/champions', label: 'Чемпионы' },
-  { to: '/leaderboard', label: 'Рейтинг' },
-]
+const navLinks = [{ to: '/', label: 'Главная' }]
 </script>
 
 <style scoped>

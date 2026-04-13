@@ -45,6 +45,25 @@ export function useLeagueApi(tier: string, region: RegionCode) {
   })
 }
 
+export interface ChampionPlayer {
+  puuid: string
+  gameName: string
+  tier: string
+  lp: number
+  wins: number
+  losses: number
+  winRate: number
+  gamesOnChampion: number
+  totalGames: number
+  championPercent: number
+}
+
+export interface ChampionPlayersResponse {
+  champion: string
+  region: string
+  players: ChampionPlayer[]
+}
+
 export function useOtpApi(region: RegionCode, tier = 'challenger', limit = 10) {
   return useFetch<OtpResponse>('/api/riot/otp', {
     query: { region, tier, limit },
