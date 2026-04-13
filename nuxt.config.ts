@@ -35,9 +35,22 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     riotApiKey: process.env['RIOT_API_KEY'] ?? '',
+    cronSecret: process.env['CRON_SECRET'] ?? '',
   },
 
   nitro: {
     preset: 'vercel',
+    devStorage: {
+      data: {
+        driver: 'fs',
+        base: '.data/db',
+      },
+    },
+    // For production persistence on Vercel, set up Vercel KV and uncomment:
+    // storage: {
+    //   data: {
+    //     driver: 'vercelKV',
+    //   },
+    // },
   },
 })
