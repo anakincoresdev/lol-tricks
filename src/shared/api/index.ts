@@ -7,4 +7,6 @@ export type {
   OtpResponse,
   ChampionPlayer,
   ChampionPlayersResponse,
+  PlayerChampionMatch,
+  PlayerChampionMatchesResponse,
 } from './riot'

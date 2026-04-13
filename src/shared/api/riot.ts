@@ -63,6 +63,32 @@ export interface ChampionPlayersResponse {
   players: ChampionPlayer[]
 }
 
+export interface PlayerChampionMatch {
+  matchId: string
+  win: boolean
+  kills: number
+  deaths: number
+  assists: number
+  items: number[]
+  runes: { style: number; runes: number[] }[]
+  summoner1Id: number
+  summoner2Id: number
+  cs: number
+  gameDuration: number
+  gameCreation: number
+  position: string
+}
+
+export interface PlayerChampionMatchesResponse {
+  puuid: string
+  champion: string
+  region: string
+  gameName: string
+  masteryPoints: number
+  masteryLevel: number
+  matches: PlayerChampionMatch[]
+}
+
 export function useOtpApi(region: RegionCode, tier = 'challenger', limit = 10) {
   return useFetch<OtpResponse>('/api/riot/otp', {
     query: { region, tier, limit },

@@ -13,3 +13,7 @@ export function getChampionSplashUrl(championId: string): string {
 export function getChampionLoadingUrl(championId: string): string {
   return `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${championId}_0.jpg`
 }
+
+export function getItemImageUrl(itemId: number): string {
+  return `${DDRAGON_BASE}/img/item/${itemId}.png`
+}
