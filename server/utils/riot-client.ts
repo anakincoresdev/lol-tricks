@@ -38,15 +38,30 @@ export async function riotFetch<T>(host: string, path: string): Promise<T> {
   const config = useRuntimeConfig()
   const apiKey = config.riotApiKey as string
   const url = `https://${host}${path}`
+  const maxRetries = 2
 
-  const response = await fetch(url, {
-    headers: {
-      'X-Riot-Token': apiKey,
-    },
-  })
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, {
+      headers: {
+        'X-Riot-Token': apiKey,
+      },
+    })
 
-  if (!response.ok) {
+    if (response.ok) {
+      return response.json() as Promise<T>
+    }
+
     const status = response.status
+
+    if (status === 429 && attempt < maxRetries) {
+      const retryAfter = response.headers.get('Retry-After')
+      const waitMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : 2000
+      await new Promise((resolve) => {
+        setTimeout(resolve, waitMs)
+      })
+      continue
+    }
+
     if (status === 429) {
       throw createError({
         statusCode: 429,
@@ -65,5 +80,8 @@ export async function riotFetch<T>(host: string, path: string): Promise<T> {
     })
   }
 
-  return response.json() as Promise<T>
+  throw createError({
+    statusCode: 500,
+    statusMessage: 'Unexpected error in riotFetch',
+  })
 }

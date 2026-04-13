@@ -48,10 +48,10 @@ export default defineEventHandler(async (event) => {
   // Fetch match IDs (ranked solo queue only)
   const matchIds = await riotFetch<string[]>(
     regionalHost,
-    `/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=420&count=50`,
+    `/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=420&count=20`,
   )
 
-  // Fetch match details in batches, filter by champion, stop early
+  // Fetch match details sequentially to avoid rate limits
   const championMatches: {
     matchId: string
     win: boolean
@@ -68,62 +68,55 @@ export default defineEventHandler(async (event) => {
     position: string
   }[] = []
 
-  const batchSize = 5
-  const targetCount = 10
+  const targetCount = 8
 
-  for (let i = 0; i < matchIds.length; i += batchSize) {
+  for (const matchId of matchIds) {
     if (championMatches.length >= targetCount) break
 
-    const batch = matchIds.slice(i, i + batchSize)
-    const results = await Promise.allSettled(
-      batch.map((matchId) =>
-        riotFetch<MatchDto>(regionalHost, `/lol/match/v5/matches/${matchId}`),
-      ),
-    )
+    await delay(300)
 
-    for (const result of results) {
-      if (result.status !== 'fulfilled') continue
-      const match = result.value
-      const player = match.info.participants.find((p) => p.puuid === puuid)
-      if (!player) continue
-      if (player.championName.toLowerCase() !== champion.toLowerCase()) {
-        continue
-      }
-
-      championMatches.push({
-        matchId: match.metadata.matchId,
-        win: player.win,
-        kills: player.kills,
-        deaths: player.deaths,
-        assists: player.assists,
-        items: [
-          player.item0,
-          player.item1,
-          player.item2,
-          player.item3,
-          player.item4,
-          player.item5,
-          player.item6,
-        ],
-        runes: player.perks.styles.map((style) => ({
-          style: style.style,
-          runes: style.selections.map((s) => s.perk),
-        })),
-        summoner1Id: player.summoner1Id,
-        summoner2Id: player.summoner2Id,
-        cs: player.totalMinionsKilled,
-        gameDuration: match.info.gameDuration,
-        gameCreation: match.info.gameCreation,
-        position: player.teamPosition,
-      })
+    let match: MatchDto
+    try {
+      match = await riotFetch<MatchDto>(
+        regionalHost,
+        `/lol/match/v5/matches/${matchId}`,
+      )
+    } catch {
+      continue
     }
 
-    if (
-      championMatches.length < targetCount &&
-      i + batchSize < matchIds.length
-    ) {
-      await delay(200)
+    const player = match.info.participants.find((p) => p.puuid === puuid)
+    if (!player) continue
+    if (player.championName.toLowerCase() !== champion.toLowerCase()) {
+      continue
     }
+
+    championMatches.push({
+      matchId: match.metadata.matchId,
+      win: player.win,
+      kills: player.kills,
+      deaths: player.deaths,
+      assists: player.assists,
+      items: [
+        player.item0,
+        player.item1,
+        player.item2,
+        player.item3,
+        player.item4,
+        player.item5,
+        player.item6,
+      ],
+      runes: player.perks.styles.map((style) => ({
+        style: style.style,
+        runes: style.selections.map((s) => s.perk),
+      })),
+      summoner1Id: player.summoner1Id,
+      summoner2Id: player.summoner2Id,
+      cs: player.totalMinionsKilled,
+      gameDuration: match.info.gameDuration,
+      gameCreation: match.info.gameCreation,
+      position: player.teamPosition,
+    })
   }
 
   // Fetch champion mastery
