@@ -17,3 +17,8 @@ export function getChampionLoadingUrl(championId: string): string {
 export function getItemImageUrl(itemId: number): string {
   return `${DDRAGON_BASE}/img/item/${itemId}.png`
 }
+
+export function getRankedEmblemUrl(tier: string): string {
+  const t = tier.toLowerCase()
+  return `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests/${t}.png`
+}
