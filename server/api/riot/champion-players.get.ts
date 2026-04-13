@@ -136,9 +136,9 @@ export default defineEventHandler(async (event) => {
     250,
   )
 
-  // Filter players who have meaningful mastery on this champion
-  // 10 000 mastery points ≈ 10+ games played
-  const MIN_MASTERY_POINTS = 10_000
+  // Filter players who actually main this champion
+  // 50 000 mastery points ≈ 30-50+ games played
+  const MIN_MASTERY_POINTS = 50_000
 
   const matchedPlayers: {
     entry: (typeof topPlayers)[number]
@@ -153,10 +153,8 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Sort by mastery points descending
-  matchedPlayers.sort(
-    (a, b) => b.mastery.championPoints - a.mastery.championPoints,
-  )
+  // Sort by LP descending (matching onetricks.gg behavior)
+  matchedPlayers.sort((a, b) => b.entry.leaguePoints - a.entry.leaguePoints)
 
   // Get display names for matched players (top 20 max)
   const toResolve = matchedPlayers.slice(0, 20)
