@@ -175,6 +175,8 @@ const regionGroups: RegionGroup[] = [
 
 const router = useRouter()
 const route = useRoute()
+const config = useRuntimeConfig()
+const apiBase = config.public['apiBaseUrl'] as string
 const championId = route.params['id'] as string
 
 const champion = CHAMPIONS.find(
@@ -231,7 +233,7 @@ function getPlayerTag(gameName: string): string {
 
 async function fetchRegion(region: RegionCode): Promise<PlayerWithRegion[]> {
   const response = await $fetch<ChampionPlayersResponse>(
-    '/api/riot/champion-players',
+    `${apiBase}/api/riot/champion-players`,
     {
       query: { champion: championId, region },
       timeout: 15000,

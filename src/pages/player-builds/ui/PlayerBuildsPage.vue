@@ -139,6 +139,8 @@ import { CHAMPIONS } from '~/src/entities/champion'
 import type { PlayerChampionMatchesResponse } from '~/src/shared/api'
 
 const route = useRoute()
+const config = useRuntimeConfig()
+const apiBase = config.public['apiBaseUrl'] as string
 const championId = route.params['id'] as string
 const puuid = route.params['puuid'] as string
 const region = (route.query['region'] as string) ?? 'euw'
@@ -221,7 +223,7 @@ async function loadMatches(): Promise<void> {
 
   try {
     const response = await $fetch<PlayerChampionMatchesResponse>(
-      '/api/riot/player-champion-matches',
+      `${apiBase}/api/riot/player-champion-matches`,
       {
         query: {
           puuid,

@@ -109,6 +109,9 @@ import { REGIONS, getChampionImageUrl } from '~/src/shared/config'
 import type { RegionCode } from '~/src/shared/config'
 import type { OtpResponse } from '~/src/shared/api'
 
+const config = useRuntimeConfig()
+const apiBase = config.public['apiBaseUrl'] as string
+
 const selectedRegion = ref<RegionCode>('euw')
 const selectedTier = ref('challenger')
 const loading = ref(false)
@@ -133,7 +136,7 @@ async function load(): Promise<void> {
   error.value = null
 
   try {
-    const response = await $fetch<OtpResponse>('/api/riot/otp', {
+    const response = await $fetch<OtpResponse>(`${apiBase}/api/riot/otp`, {
       query: {
         region: selectedRegion.value,
         tier: selectedTier.value,

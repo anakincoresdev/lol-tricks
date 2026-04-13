@@ -40,7 +40,9 @@ export interface OtpResponse {
 }
 
 export function useLeagueApi(tier: string, region: RegionCode) {
-  return useFetch<LeagueResponse>(`/api/riot/league/${tier}`, {
+  const config = useRuntimeConfig()
+  const apiBase = config.public['apiBaseUrl'] as string
+  return useFetch<LeagueResponse>(`${apiBase}/api/riot/league/${tier}`, {
     query: { region },
   })
 }
@@ -90,7 +92,9 @@ export interface PlayerChampionMatchesResponse {
 }
 
 export function useOtpApi(region: RegionCode, tier = 'challenger', limit = 10) {
-  return useFetch<OtpResponse>('/api/riot/otp', {
+  const config = useRuntimeConfig()
+  const apiBase = config.public['apiBaseUrl'] as string
+  return useFetch<OtpResponse>(`${apiBase}/api/riot/otp`, {
     query: { region, tier, limit },
   })
 }
