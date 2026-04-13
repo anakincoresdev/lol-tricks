@@ -24,20 +24,29 @@
             {{ r.name }}
           </option>
         </select>
+        <select v-model="selectedTier" class="champ-page__select">
+          <option value="challenger">Challenger</option>
+          <option value="grandmaster">Grandmaster</option>
+          <option value="master">Master</option>
+        </select>
         <button
           class="champ-page__btn"
           :disabled="loading"
           @click="loadPlayers"
         >
-          {{ loading ? 'Загрузка...' : 'Найти игроков' }}
+          {{ loading ? 'Загрузка...' : 'Обновить' }}
         </button>
+      </div>
+
+      <div v-if="cached && updatedAt" class="champ-page__cache-info">
+        Данные из кэша · Обновлено {{ updatedLabel }}
       </div>
 
       <div v-if="loading" class="champ-page__loading">
         <div class="champ-page__spinner" />
         <p>Ищем игроков на {{ champion?.name ?? championId }}...</p>
         <p class="champ-page__loading-hint">
-          Анализируем матчи Challenger, Grandmaster и Master игроков
+          Анализируем матчи {{ selectedTier }} игроков
         </p>
       </div>
 
@@ -115,16 +124,12 @@
           регионе.
         </p>
       </div>
-
-      <div v-if="!players && !loading && !error" class="champ-page__prompt">
-        <p>Выбери регион и нажми "Найти игроков"</p>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { REGIONS, getChampionImageUrl } from '~/src/shared/config'
 import type { RegionCode } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
@@ -144,9 +149,18 @@ useHead({
 })
 
 const selectedRegion = ref<RegionCode>('euw')
+const selectedTier = ref('challenger')
 const loading = ref(false)
 const error = ref<string | null>(null)
 const players = ref<ChampionPlayer[] | null>(null)
+const cached = ref(false)
+const updatedAt = ref<number | null>(null)
+
+const updatedLabel = computed(() => {
+  if (!updatedAt.value) return ''
+  const date = new Date(updatedAt.value)
+  return date.toLocaleString('ru-RU')
+})
 
 const errorMessage = computed(() => {
   if (!error.value) return ''
@@ -155,6 +169,9 @@ const errorMessage = computed(() => {
   }
   if (error.value.includes('429')) {
     return 'Превышен лимит запросов. Подожди немного и попробуй снова.'
+  }
+  if (error.value.includes('504') || error.value.includes('timeout')) {
+    return 'Сервер не успел ответить. Попробуй другой регион или тир.'
   }
   return `Ошибка: ${error.value}`
 })
@@ -170,13 +187,26 @@ async function loadPlayers(): Promise<void> {
         query: {
           champion: championId,
           region: selectedRegion.value,
+          tier: selectedTier.value,
         },
       },
     )
     players.value = response.players
+    cached.value = response.cached ?? false
+    updatedAt.value = response.updatedAt ?? null
   } catch (e: unknown) {
-    const err = e as { statusMessage?: string; message?: string }
-    error.value = err.statusMessage ?? err.message ?? 'Unknown error'
+    const err = e as {
+      data?: { statusMessage?: string; message?: string }
+      statusMessage?: string
+      message?: string
+      status?: number
+    }
+    error.value =
+      err.data?.statusMessage ??
+      err.data?.message ??
+      err.statusMessage ??
+      err.message ??
+      'Unknown error'
   } finally {
     loading.value = false
   }
@@ -188,6 +218,14 @@ function getRankClass(tier: string): string {
   if (lower === 'grandmaster') return 'champ-page__rank-badge--grandmaster'
   return 'champ-page__rank-badge--master'
 }
+
+watch([selectedRegion, selectedTier], () => {
+  loadPlayers()
+})
+
+onMounted(() => {
+  loadPlayers()
+})
 </script>
 
 <style scoped>
@@ -248,7 +286,7 @@ function getRankClass(tier: string): string {
 .champ-page__controls {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
 }
 
@@ -292,6 +330,17 @@ function getRankClass(tier: string): string {
 .champ-page__btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.champ-page__cache-info {
+  font-size: 0.8rem;
+  color: #5a8a5a;
+  margin-bottom: 1rem;
+  padding: 6px 12px;
+  background: rgba(78, 201, 122, 0.08);
+  border: 1px solid rgba(78, 201, 122, 0.15);
+  border-radius: 8px;
+  display: inline-block;
 }
 
 .champ-page__loading {
@@ -440,13 +489,6 @@ function getRankClass(tier: string): string {
   font-size: 0.85rem;
   margin-top: 0.5rem;
   color: #4a4a5a;
-}
-
-.champ-page__prompt {
-  text-align: center;
-  padding: 4rem 1rem;
-  color: #4a4a5a;
-  font-size: 1rem;
 }
 
 @media (max-width: 640px) {
