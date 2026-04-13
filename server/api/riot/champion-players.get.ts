@@ -3,22 +3,24 @@ import {
   getRegionalHost,
   riotFetch,
 } from '~/server/utils/riot-client'
-import type { LeagueList, MatchDto } from '~/server/utils/riot-types'
+import type {
+  LeagueList,
+  LeagueEntry,
+  ChampionMasteryDto,
+  AccountDto,
+} from '~/server/utils/riot-types'
 
-interface StoredPlayer {
-  puuid: string
-  gameName: string
-  tier: string
-  lp: number
-  wins: number
-  losses: number
-  winRate: number
-  champions: Record<string, number>
-  totalGames: number
-  region: string
+interface DDragonChampionEntry {
+  key: string
+  id: string
+  name: string
 }
 
-interface ChampionPlayer {
+interface DDragonResponse {
+  data: Record<string, DDragonChampionEntry>
+}
+
+interface ChampionPlayerResult {
   puuid: string
   gameName: string
   tier: string
@@ -26,9 +28,8 @@ interface ChampionPlayer {
   wins: number
   losses: number
   winRate: number
-  gamesOnChampion: number
-  totalGames: number
-  championPercent: number
+  masteryPoints: number
+  masteryLevel: number
 }
 
 function delay(ms: number): Promise<void> {
@@ -37,29 +38,48 @@ function delay(ms: number): Promise<void> {
   })
 }
 
-function findChampionGames(
-  champions: Record<string, number>,
-  champion: string,
-): number {
-  // Try exact match first
-  const exact = champions[champion]
-  if (exact !== undefined) return exact
-
-  // Case-insensitive match
-  const lowerTarget = champion.toLowerCase()
-  for (const [champ, count] of Object.entries(champions)) {
-    if (champ.toLowerCase() === lowerTarget) {
-      return count
+async function batchRequests<T>(
+  fns: (() => Promise<T>)[],
+  batchSize: number,
+  delayMs: number,
+): Promise<(T | null)[]> {
+  const results: (T | null)[] = []
+  for (let i = 0; i < fns.length; i += batchSize) {
+    const batch = fns.slice(i, i + batchSize)
+    const settled = await Promise.allSettled(batch.map((fn) => fn()))
+    for (const r of settled) {
+      results.push(r.status === 'fulfilled' ? r.value : null)
+    }
+    if (i + batchSize < fns.length) {
+      await delay(delayMs)
     }
   }
-  return 0
+  return results
+}
+
+// Cache DDragon champion ID mapping in memory
+let championIdCache: Record<string, number> | null = null
+
+async function getChampionNumericId(
+  championName: string,
+): Promise<number | null> {
+  if (!championIdCache) {
+    const res = await fetch(
+      'https://ddragon.leagueoflegends.com/cdn/15.7.1/data/en_US/champion.json',
+    )
+    const data = (await res.json()) as DDragonResponse
+    championIdCache = {}
+    for (const champ of Object.values(data.data)) {
+      championIdCache[champ.id.toLowerCase()] = parseInt(champ.key, 10)
+    }
+  }
+  return championIdCache[championName.toLowerCase()] ?? null
 }
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const champion = (query['champion'] as string) ?? ''
   const region = (query['region'] as string) ?? 'euw'
-  const tier = (query['tier'] as string) ?? 'challenger'
 
   if (!champion) {
     throw createError({
@@ -68,154 +88,119 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const validTiers = ['challenger', 'grandmaster', 'master']
-  if (!validTiers.includes(tier)) {
+  // Get numeric champion ID from DDragon
+  const championNumericId = await getChampionNumericId(champion)
+  if (!championNumericId) {
     throw createError({
       statusCode: 400,
-      statusMessage:
-        'Invalid tier. Must be: challenger, grandmaster, or master.',
+      statusMessage: `Unknown champion: ${champion}`,
     })
   }
 
-  // Try reading from pre-collected storage
-  const storage = useStorage('data')
-  const storageKey = `players:${region}:${tier}`
-  const stored = await storage.getItem<StoredPlayer[]>(storageKey)
-
-  if (stored && stored.length > 0) {
-    const matching: ChampionPlayer[] = []
-
-    for (const player of stored) {
-      const games = findChampionGames(player.champions, champion)
-      if (games > 0) {
-        matching.push({
-          puuid: player.puuid,
-          gameName: player.gameName,
-          tier: player.tier,
-          lp: player.lp,
-          wins: player.wins,
-          losses: player.losses,
-          winRate: player.winRate,
-          gamesOnChampion: games,
-          totalGames: player.totalGames,
-          championPercent: Math.round((games / player.totalGames) * 100),
-        })
-      }
-    }
-
-    matching.sort(
-      (a, b) => b.gamesOnChampion - a.gamesOnChampion || b.lp - a.lp,
-    )
-
-    const updated = await storage.getItem<number>(`updated:${region}:${tier}`)
-
-    return {
-      champion,
-      region,
-      tier,
-      players: matching,
-      cached: true,
-      updatedAt: updated,
-    }
-  }
-
-  // Fallback: live scan (limited to 5 players)
   const platformHost = getPlatformHost(region)
   const regionalHost = getRegionalHost(region)
 
-  const league = await riotFetch<LeagueList>(
-    platformHost,
-    `/lol/league/v4/${tier}leagues/by-queue/RANKED_SOLO_5x5`,
+  // Fetch all 3 tiers in parallel
+  const tiers = ['challenger', 'grandmaster', 'master'] as const
+  const leagueResults = await Promise.all(
+    tiers.map((tier) =>
+      riotFetch<LeagueList>(
+        platformHost,
+        `/lol/league/v4/${tier}leagues/by-queue/RANKED_SOLO_5x5`,
+      ),
+    ),
   )
 
-  const topPlayers = league.entries
-    .sort((a, b) => b.leaguePoints - a.leaguePoints)
-    .slice(0, 5)
+  // Merge all players with tier info, sort by LP, take top 50
+  const allEntries: (LeagueEntry & { tierName: string })[] = []
+  for (const league of leagueResults) {
+    for (const entry of league.entries) {
+      allEntries.push({ ...entry, tierName: league.tier })
+    }
+  }
+  allEntries.sort((a, b) => b.leaguePoints - a.leaguePoints)
+  const topPlayers = allEntries.slice(0, 50)
 
-  const allPlayers: ChampionPlayer[] = []
+  await delay(200)
 
-  for (const player of topPlayers) {
-    try {
-      const matchIds = await riotFetch<string[]>(
-        regionalHost,
-        `/lol/match/v5/matches/by-puuid/${player.puuid}/ids?queue=420&count=5`,
-      )
-
-      if (matchIds.length === 0) continue
-
-      await delay(100)
-
-      const matchDetails = await Promise.all(
-        matchIds
-          .slice(0, 3)
-          .map((matchId) =>
-            riotFetch<MatchDto>(
-              regionalHost,
-              `/lol/match/v5/matches/${matchId}`,
-            ),
-          ),
-      )
-
-      let gamesOnChampion = 0
-      for (const match of matchDetails) {
-        const participant = match.info.participants.find(
-          (p) => p.puuid === player.puuid,
-        )
-        if (
-          participant &&
-          participant.championName.toLowerCase() === champion.toLowerCase()
-        ) {
-          gamesOnChampion++
-        }
-      }
-
-      if (gamesOnChampion === 0) {
-        await delay(100)
-        continue
-      }
-
-      const firstMatch = matchDetails[0]
-      const participantData = firstMatch?.info.participants.find(
-        (p) => p.puuid === player.puuid,
-      )
-      const gameName =
-        participantData?.riotIdGameName ??
-        participantData?.summonerName ??
-        'Unknown'
-
-      const totalGames = matchDetails.length
-
-      allPlayers.push({
-        puuid: player.puuid,
-        gameName,
-        tier: league.tier,
-        lp: player.leaguePoints,
-        wins: player.wins,
-        losses: player.losses,
-        winRate: Math.round(
-          (player.wins / (player.wins + player.losses)) * 100,
+  // Batch check champion mastery for all 50 players
+  const masteryResults = await batchRequests(
+    topPlayers.map(
+      (player) => () =>
+        riotFetch<ChampionMasteryDto>(
+          platformHost,
+          `/lol/champion-mastery/v4/champion-masteries/by-puuid/${player.puuid}/by-champion/${championNumericId}`,
         ),
-        gamesOnChampion,
-        totalGames,
-        championPercent: Math.round((gamesOnChampion / totalGames) * 100),
-      })
+    ),
+    10,
+    250,
+  )
 
-      await delay(150)
-    } catch {
-      continue
+  // Filter players who have mastery on this champion
+  const matchedPlayers: {
+    entry: (typeof topPlayers)[number]
+    mastery: ChampionMasteryDto
+  }[] = []
+
+  for (let i = 0; i < topPlayers.length; i++) {
+    const mastery = masteryResults[i]
+    const entry = topPlayers[i]
+    if (entry && mastery && mastery.championPoints > 0) {
+      matchedPlayers.push({ entry, mastery })
     }
   }
 
-  allPlayers.sort(
-    (a, b) => b.gamesOnChampion - a.gamesOnChampion || b.lp - a.lp,
+  // Sort by mastery points descending
+  matchedPlayers.sort(
+    (a, b) => b.mastery.championPoints - a.mastery.championPoints,
   )
+
+  // Get display names for matched players (top 20 max)
+  const toResolve = matchedPlayers.slice(0, 20)
+
+  await delay(200)
+
+  const accountResults = await batchRequests(
+    toResolve.map(
+      ({ entry }) =>
+        () =>
+          riotFetch<AccountDto>(
+            regionalHost,
+            `/riot/account/v1/accounts/by-puuid/${entry.puuid}`,
+          ),
+    ),
+    10,
+    250,
+  )
+
+  // Build final response
+  const players: ChampionPlayerResult[] = []
+
+  for (let i = 0; i < toResolve.length; i++) {
+    const item = toResolve[i]
+    if (!item) continue
+    const { entry, mastery } = item
+    const account = accountResults[i]
+    const gameName = account
+      ? `${account.gameName}#${account.tagLine}`
+      : 'Unknown'
+
+    players.push({
+      puuid: entry.puuid,
+      gameName,
+      tier: entry.tierName,
+      lp: entry.leaguePoints,
+      wins: entry.wins,
+      losses: entry.losses,
+      winRate: Math.round((entry.wins / (entry.wins + entry.losses)) * 100),
+      masteryPoints: mastery.championPoints,
+      masteryLevel: mastery.championLevel,
+    })
+  }
 
   return {
     champion,
     region,
-    tier,
-    players: allPlayers,
-    cached: false,
-    updatedAt: null,
+    players,
   }
 })
