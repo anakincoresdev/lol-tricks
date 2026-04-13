@@ -32,6 +32,15 @@
 
         <div class="champ-page__region-tabs">
           <button
+            class="champ-page__region-tab"
+            :class="{
+              'champ-page__region-tab--active': selectedRegion === 'all',
+            }"
+            @click="selectRegion('all')"
+          >
+            All
+          </button>
+          <button
             v-for="region in currentRegions"
             :key="region"
             class="champ-page__region-tab"
@@ -124,8 +133,7 @@
       >
         <p>
           Не найдено OTP игроков на
-          {{ champion?.name ?? championId }} в регионе
-          {{ selectedRegion.toUpperCase() }}.
+          {{ champion?.name ?? championId }}.
         </p>
         <p class="champ-page__empty-hint">Попробуй другой регион.</p>
       </div>
@@ -144,6 +152,10 @@ interface RegionGroup {
   id: string
   name: string
   regions: RegionCode[]
+}
+
+interface PlayerWithRegion extends ChampionPlayer {
+  playerRegion: RegionCode
 }
 
 const regionGroups: RegionGroup[] = [
@@ -176,10 +188,10 @@ useHead({
 })
 
 const selectedGroup = ref('major')
-const selectedRegion = ref<RegionCode>('kr')
+const selectedRegion = ref<RegionCode | 'all'>('all')
 const loading = ref(false)
 const error = ref<string | null>(null)
-const players = ref<ChampionPlayer[] | null>(null)
+const players = ref<PlayerWithRegion[] | null>(null)
 
 const currentRegions = computed(() => {
   const group = regionGroups.find((g) => g.id === selectedGroup.value)
@@ -202,15 +214,10 @@ const errorMessage = computed(() => {
 
 function selectGroup(groupId: string): void {
   selectedGroup.value = groupId
-  const group = regionGroups.find((g) => g.id === groupId)
-  if (!group) return
-  const firstRegion = group.regions[0]
-  if (firstRegion && !group.regions.includes(selectedRegion.value)) {
-    selectedRegion.value = firstRegion
-  }
+  selectedRegion.value = 'all'
 }
 
-function selectRegion(region: RegionCode): void {
+function selectRegion(region: RegionCode | 'all'): void {
   selectedRegion.value = region
 }
 
@@ -222,22 +229,54 @@ function getPlayerTag(gameName: string): string {
   return gameName.split('#')[1] ?? ''
 }
 
+async function fetchRegion(region: RegionCode): Promise<PlayerWithRegion[]> {
+  const response = await $fetch<ChampionPlayersResponse>(
+    '/api/riot/champion-players',
+    {
+      query: { champion: championId, region },
+      timeout: 15000,
+    },
+  )
+  return response.players.map((p) => ({ ...p, playerRegion: region }))
+}
+
 async function loadPlayers(): Promise<void> {
   loading.value = true
   error.value = null
 
   try {
-    const response = await $fetch<ChampionPlayersResponse>(
-      '/api/riot/champion-players',
-      {
-        query: {
-          champion: championId,
-          region: selectedRegion.value,
-        },
-        timeout: 15000,
-      },
-    )
-    players.value = response.players
+    if (selectedRegion.value === 'all') {
+      const regions = currentRegions.value
+      const results = await Promise.allSettled(
+        regions.map((r) => fetchRegion(r)),
+      )
+
+      const merged: PlayerWithRegion[] = []
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          merged.push(...result.value)
+        }
+      }
+
+      const seen = new Set<string>()
+      const unique = merged.filter((p) => {
+        if (seen.has(p.puuid)) return false
+        seen.add(p.puuid)
+        return true
+      })
+
+      unique.sort((a, b) => b.lp - a.lp)
+      players.value = unique.slice(0, 30)
+
+      if (merged.length === 0) {
+        const firstFailed = results.find((r) => r.status === 'rejected')
+        if (firstFailed && firstFailed.status === 'rejected') {
+          throw firstFailed.reason
+        }
+      }
+    } else {
+      players.value = await fetchRegion(selectedRegion.value)
+    }
   } catch (e: unknown) {
     const err = e as {
       data?: { statusMessage?: string; message?: string }
@@ -256,17 +295,17 @@ async function loadPlayers(): Promise<void> {
   }
 }
 
-function openPlayerBuilds(player: ChampionPlayer): void {
+function openPlayerBuilds(player: PlayerWithRegion): void {
   router.push({
     path: `/champion/${championId}/player/${player.puuid}`,
     query: {
-      region: selectedRegion.value,
+      region: player.playerRegion,
       name: player.gameName,
     },
   })
 }
 
-watch(selectedRegion, () => {
+watch([selectedRegion, selectedGroup], () => {
   loadPlayers()
 })
 
