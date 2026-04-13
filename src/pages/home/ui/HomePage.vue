@@ -4,88 +4,101 @@
       <div class="home-page__hero-bg" />
       <div class="home-page__hero-content">
         <h1 class="home-page__title">{{ APP_NAME }}</h1>
-        <p class="home-page__subtitle">{{ APP_DESCRIPTION }}</p>
-        <div class="home-page__hero-search">
-          <SearchInput
-            v-model="heroSearch"
-            placeholder="Найти чемпиона или игрока..."
-          />
+        <p class="home-page__subtitle">
+          Узнай, что собирают лучшие OTP игроки на твоём чемпионе
+        </p>
+        <div class="home-page__search">
+          <SearchAutocomplete />
         </div>
-        <div class="home-page__stats">
-          <div class="home-page__stat">
-            <span class="home-page__stat-value">{{ CHAMPIONS.length }}+</span>
-            <span class="home-page__stat-label">Чемпионов</span>
-          </div>
-          <div class="home-page__stat">
-            <span class="home-page__stat-value">11</span>
-            <span class="home-page__stat-label">Регионов</span>
-          </div>
-          <div class="home-page__stat">
-            <span class="home-page__stat-value">Masters+</span>
-            <span class="home-page__stat-label">Только высшие ранги</span>
-          </div>
+        <p class="home-page__hint">
+          Начни вводить имя чемпиона на русском или английском
+        </p>
+        <div class="home-page__popular">
+          <span class="home-page__popular-label">Популярные:</span>
+          <NuxtLink
+            v-for="champ in popularChampions"
+            :key="champ.id"
+            :to="`/champion/${champ.id}`"
+            class="home-page__popular-tag"
+          >
+            <img
+              :src="getChampionImageUrl(champ.id)"
+              :alt="champ.name"
+              class="home-page__popular-icon"
+              loading="lazy"
+            />
+            {{ champ.name }}
+          </NuxtLink>
         </div>
       </div>
     </section>
-
-    <div class="home-page__container">
-      <ChampionGrid />
-      <TopPlayers :players="MOCK_TOP_PLAYERS" />
-      <OtpLeaderboard />
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { APP_NAME, APP_DESCRIPTION } from '~/src/shared/config'
-import { SearchInput } from '~/src/shared/ui'
+import { APP_NAME, getChampionImageUrl } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
-import { MOCK_TOP_PLAYERS } from '~/src/entities/player'
-import { ChampionGrid } from '~/src/widgets/champion-grid'
-import { TopPlayers } from '~/src/widgets/top-players'
-import { OtpLeaderboard } from '~/src/widgets/otp-leaderboard'
+import { SearchAutocomplete } from '~/src/widgets/search-autocomplete'
 
 useHead({
   title: `${APP_NAME} — Билды OTP игроков League of Legends`,
 })
 
-const heroSearch = ref('')
+const popularIds = [
+  'Yasuo',
+  'Ahri',
+  'Zed',
+  'LeeSin',
+  'Jinx',
+  'Vayne',
+  'Katarina',
+  'Riven',
+]
+const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
 </script>
 
 <style scoped>
+.home-page {
+  min-height: calc(100vh - 56px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .home-page__hero {
   position: relative;
-  padding: 5rem 1.5rem 4rem;
+  padding: 2rem 1.5rem;
   display: flex;
   justify-content: center;
-  overflow: hidden;
+  width: 100%;
 }
 
 .home-page__hero-bg {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background:
     radial-gradient(
-      ellipse at 50% 0%,
-      rgba(200, 155, 60, 0.12) 0%,
+      ellipse at 50% 30%,
+      rgba(200, 155, 60, 0.08) 0%,
       transparent 60%
     ),
     radial-gradient(
-      ellipse at 80% 50%,
-      rgba(100, 60, 180, 0.06) 0%,
+      ellipse at 80% 60%,
+      rgba(100, 60, 180, 0.04) 0%,
       transparent 50%
     );
+  pointer-events: none;
 }
 
 .home-page__hero-content {
   position: relative;
   text-align: center;
   max-width: 640px;
+  width: 100%;
 }
 
 .home-page__title {
-  font-size: 4rem;
+  font-size: 4.5rem;
   font-weight: 900;
   background: linear-gradient(135deg, #c89b3c 0%, #f0e6d2 50%, #c89b3c 100%);
   -webkit-background-clip: text;
@@ -96,62 +109,72 @@ const heroSearch = ref('')
 }
 
 .home-page__subtitle {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   color: #8a8a9a;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   line-height: 1.6;
 }
 
-.home-page__hero-search {
+.home-page__search {
   display: flex;
   justify-content: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1rem;
 }
 
-.home-page__stats {
+.home-page__hint {
+  font-size: 0.8rem;
+  color: #4a4a5a;
+  margin-bottom: 3rem;
+}
+
+.home-page__popular {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 2.5rem;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-.home-page__stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.home-page__stat-value {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #c89b3c;
-}
-
-.home-page__stat-label {
+.home-page__popular-label {
   font-size: 0.8rem;
-  color: #6a6a7a;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: #5a5a6a;
+  margin-right: 4px;
 }
 
-.home-page__container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem 4rem;
+.home-page__popular-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 5px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(200, 155, 60, 0.12);
+  border-radius: 20px;
+  color: #b0b0c0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.home-page__popular-tag:hover {
+  background: rgba(200, 155, 60, 0.1);
+  border-color: rgba(200, 155, 60, 0.3);
+  color: #f0e6d2;
+}
+
+.home-page__popular-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
 }
 
 @media (max-width: 640px) {
   .home-page__title {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
   }
 
-  .home-page__stats {
-    gap: 1.5rem;
-  }
-
-  .home-page__stat-value {
-    font-size: 1.2rem;
+  .home-page__subtitle {
+    font-size: 1rem;
   }
 }
 </style>
