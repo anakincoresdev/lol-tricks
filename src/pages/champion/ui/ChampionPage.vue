@@ -67,7 +67,8 @@
               <tr
                 v-for="(player, index) in players"
                 :key="player.puuid"
-                class="champ-page__row"
+                class="champ-page__row champ-page__row--clickable"
+                @click="openPlayerBuilds(player)"
               >
                 <td class="champ-page__td champ-page__td--rank">
                   {{ index + 1 }}
@@ -124,6 +125,8 @@ import { REGIONS, getChampionImageUrl } from '~/src/shared/config'
 import type { RegionCode } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
 import type { ChampionPlayersResponse, ChampionPlayer } from '~/src/shared/api'
+
+const router = useRouter()
 
 const route = useRoute()
 const championId = route.params['id'] as string
@@ -206,6 +209,16 @@ function getRankClass(tier: string): string {
   if (lower === 'challenger') return 'champ-page__rank-badge--challenger'
   if (lower === 'grandmaster') return 'champ-page__rank-badge--grandmaster'
   return 'champ-page__rank-badge--master'
+}
+
+function openPlayerBuilds(player: ChampionPlayer): void {
+  router.push({
+    path: `/champion/${championId}/player/${player.puuid}`,
+    query: {
+      region: selectedRegion.value,
+      name: player.gameName,
+    },
+  })
 }
 
 watch(selectedRegion, () => {
@@ -398,6 +411,10 @@ onMounted(() => {
 
 .champ-page__row {
   transition: background 0.15s;
+}
+
+.champ-page__row--clickable {
+  cursor: pointer;
 }
 
 .champ-page__row:hover {
