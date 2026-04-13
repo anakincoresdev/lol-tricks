@@ -24,11 +24,6 @@
             {{ r.name }}
           </option>
         </select>
-        <select v-model="selectedTier" class="champ-page__select">
-          <option value="challenger">Challenger</option>
-          <option value="grandmaster">Grandmaster</option>
-          <option value="master">Master</option>
-        </select>
         <button
           class="champ-page__btn"
           :disabled="loading"
@@ -38,15 +33,11 @@
         </button>
       </div>
 
-      <div v-if="cached && updatedAt" class="champ-page__cache-info">
-        Данные из кэша · Обновлено {{ updatedLabel }}
-      </div>
-
       <div v-if="loading" class="champ-page__loading">
         <div class="champ-page__spinner" />
-        <p>Ищем игроков на {{ champion?.name ?? championId }}...</p>
+        <p>Ищем OTP игроков на {{ champion?.name ?? championId }}...</p>
         <p class="champ-page__loading-hint">
-          Анализируем матчи {{ selectedTier }} игроков
+          Сканируем Challenger, Grandmaster и Master
         </p>
       </div>
 
@@ -69,8 +60,7 @@
                 <th class="champ-page__th">Игрок</th>
                 <th class="champ-page__th">Ранг</th>
                 <th class="champ-page__th">WR</th>
-                <th class="champ-page__th">Игр на чемпионе</th>
-                <th class="champ-page__th">% игр</th>
+                <th class="champ-page__th">Мастерство</th>
               </tr>
             </thead>
             <tbody>
@@ -99,11 +89,11 @@
                 >
                   {{ player.winRate }}%
                 </td>
-                <td class="champ-page__td champ-page__td--games">
-                  {{ player.gamesOnChampion }} / {{ player.totalGames }}
-                </td>
-                <td class="champ-page__td champ-page__td--percent">
-                  {{ player.championPercent }}%
+                <td class="champ-page__td champ-page__td--mastery">
+                  <span class="champ-page__mastery-level">
+                    Lvl {{ player.masteryLevel }}
+                  </span>
+                  {{ formatMastery(player.masteryPoints) }}
                 </td>
               </tr>
             </tbody>
@@ -116,8 +106,8 @@
         class="champ-page__empty"
       >
         <p>
-          Не найдено игроков на {{ champion?.name ?? championId }} среди топ
-          игроков региона {{ selectedRegion.toUpperCase() }}.
+          Не найдено OTP игроков на {{ champion?.name ?? championId }} в регионе
+          {{ selectedRegion.toUpperCase() }}.
         </p>
         <p class="champ-page__empty-hint">
           Попробуй другой регион — чемпион может быть популярнее в другом
@@ -144,23 +134,14 @@ const champion = CHAMPIONS.find(
 
 useHead({
   title: champion
-    ? `${champion.name} — Игроки | LoL Tricks`
-    : `${championId} — Игроки | LoL Tricks`,
+    ? `${champion.name} — OTP игроки | LoL Tricks`
+    : `${championId} — OTP игроки | LoL Tricks`,
 })
 
 const selectedRegion = ref<RegionCode>('euw')
-const selectedTier = ref('challenger')
 const loading = ref(false)
 const error = ref<string | null>(null)
 const players = ref<ChampionPlayer[] | null>(null)
-const cached = ref(false)
-const updatedAt = ref<number | null>(null)
-
-const updatedLabel = computed(() => {
-  if (!updatedAt.value) return ''
-  const date = new Date(updatedAt.value)
-  return date.toLocaleString('ru-RU')
-})
 
 const errorMessage = computed(() => {
   if (!error.value) return ''
@@ -171,10 +152,20 @@ const errorMessage = computed(() => {
     return 'Превышен лимит запросов. Подожди немного и попробуй снова.'
   }
   if (error.value.includes('504') || error.value.includes('timeout')) {
-    return 'Сервер не успел ответить. Попробуй другой регион или тир.'
+    return 'Сервер не успел ответить. Попробуй другой регион.'
   }
   return `Ошибка: ${error.value}`
 })
+
+function formatMastery(points: number): string {
+  if (points >= 1_000_000) {
+    return `${(points / 1_000_000).toFixed(1)}M`
+  }
+  if (points >= 1_000) {
+    return `${Math.round(points / 1_000)}K`
+  }
+  return String(points)
+}
 
 async function loadPlayers(): Promise<void> {
   loading.value = true
@@ -187,13 +178,11 @@ async function loadPlayers(): Promise<void> {
         query: {
           champion: championId,
           region: selectedRegion.value,
-          tier: selectedTier.value,
         },
+        timeout: 15000,
       },
     )
     players.value = response.players
-    cached.value = response.cached ?? false
-    updatedAt.value = response.updatedAt ?? null
   } catch (e: unknown) {
     const err = e as {
       data?: { statusMessage?: string; message?: string }
@@ -219,7 +208,7 @@ function getRankClass(tier: string): string {
   return 'champ-page__rank-badge--master'
 }
 
-watch([selectedRegion, selectedTier], () => {
+watch(selectedRegion, () => {
   loadPlayers()
 })
 
@@ -286,7 +275,7 @@ onMounted(() => {
 .champ-page__controls {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
   flex-wrap: wrap;
 }
 
@@ -330,17 +319,6 @@ onMounted(() => {
 .champ-page__btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.champ-page__cache-info {
-  font-size: 0.8rem;
-  color: #5a8a5a;
-  margin-bottom: 1rem;
-  padding: 6px 12px;
-  background: rgba(78, 201, 122, 0.08);
-  border: 1px solid rgba(78, 201, 122, 0.15);
-  border-radius: 8px;
-  display: inline-block;
 }
 
 .champ-page__loading {
@@ -448,13 +426,20 @@ onMounted(() => {
   font-weight: 600;
 }
 
-.champ-page__td--games {
-  color: #b0b0c0;
-}
-
-.champ-page__td--percent {
+.champ-page__td--mastery {
   color: #c89b3c;
   font-weight: 700;
+}
+
+.champ-page__mastery-level {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #8a8a9a;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
 }
 
 .champ-page__rank-badge {
