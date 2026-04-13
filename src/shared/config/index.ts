@@ -14,4 +14,5 @@ export {
   getChampionSplashUrl,
   getChampionLoadingUrl,
   getItemImageUrl,
+  getRankedEmblemUrl,
 } from './ddragon'

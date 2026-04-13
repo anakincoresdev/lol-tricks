@@ -1,36 +1,48 @@
 <template>
   <div class="champ-page">
     <div class="champ-page__container">
-      <div class="champ-page__header">
-        <NuxtLink to="/" class="champ-page__back">
-          &larr; Назад к поиску
-        </NuxtLink>
-        <div v-if="champion" class="champ-page__hero">
-          <img
-            :src="getChampionImageUrl(champion.id)"
-            :alt="champion.name"
-            class="champ-page__icon"
-          />
-          <div class="champ-page__info">
-            <h1 class="champ-page__name">{{ champion.name }}</h1>
-            <p class="champ-page__title">{{ champion.title }}</p>
-          </div>
+      <NuxtLink to="/" class="champ-page__back">&larr; Назад к поиску</NuxtLink>
+
+      <div v-if="champion" class="champ-page__hero">
+        <img
+          :src="getChampionImageUrl(champion.id)"
+          :alt="champion.name"
+          class="champ-page__icon"
+        />
+        <div class="champ-page__info">
+          <h1 class="champ-page__name">One Trick Ranking</h1>
+          <p class="champ-page__title">{{ champion.name }}</p>
         </div>
       </div>
 
-      <div class="champ-page__controls">
-        <select v-model="selectedRegion" class="champ-page__select">
-          <option v-for="r in REGIONS" :key="r.code" :value="r.code">
-            {{ r.name }}
-          </option>
-        </select>
-        <button
-          class="champ-page__btn"
-          :disabled="loading"
-          @click="loadPlayers"
-        >
-          {{ loading ? 'Загрузка...' : 'Обновить' }}
-        </button>
+      <div class="champ-page__filters">
+        <div class="champ-page__region-groups">
+          <button
+            v-for="group in regionGroups"
+            :key="group.id"
+            class="champ-page__group-tab"
+            :class="{
+              'champ-page__group-tab--active': selectedGroup === group.id,
+            }"
+            @click="selectGroup(group.id)"
+          >
+            {{ group.name }}
+          </button>
+        </div>
+
+        <div class="champ-page__region-tabs">
+          <button
+            v-for="region in currentRegions"
+            :key="region"
+            class="champ-page__region-tab"
+            :class="{
+              'champ-page__region-tab--active': selectedRegion === region,
+            }"
+            @click="selectRegion(region)"
+          >
+            {{ region.toUpperCase() }}
+          </button>
+        </div>
       </div>
 
       <div v-if="loading" class="champ-page__loading">
@@ -49,52 +61,56 @@
         v-if="players && players.length > 0 && !loading"
         class="champ-page__results"
       >
-        <h2 class="champ-page__results-title">
-          Найдено {{ players.length }} игроков
-        </h2>
         <div class="champ-page__table-wrapper">
           <table class="champ-page__table">
             <thead>
               <tr>
-                <th class="champ-page__th champ-page__th--rank">#</th>
-                <th class="champ-page__th">Игрок</th>
-                <th class="champ-page__th">Ранг</th>
-                <th class="champ-page__th">WR</th>
-                <th class="champ-page__th">Мастерство</th>
+                <th class="champ-page__th champ-page__th--rank" />
+                <th class="champ-page__th champ-page__th--tier">Tier</th>
+                <th class="champ-page__th">Player</th>
+                <th class="champ-page__th champ-page__th--lp">LP &#9660;</th>
+                <th class="champ-page__th champ-page__th--games">И</th>
+                <th class="champ-page__th champ-page__th--wr">WR</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="(player, index) in players"
                 :key="player.puuid"
-                class="champ-page__row champ-page__row--clickable"
+                class="champ-page__row"
                 @click="openPlayerBuilds(player)"
               >
                 <td class="champ-page__td champ-page__td--rank">
                   {{ index + 1 }}
                 </td>
-                <td class="champ-page__td champ-page__td--name">
-                  {{ player.gameName }}
+                <td class="champ-page__td champ-page__td--tier">
+                  <img
+                    :src="getRankedEmblemUrl(player.tier)"
+                    :alt="player.tier"
+                    class="champ-page__tier-icon"
+                  />
                 </td>
-                <td class="champ-page__td">
-                  <span
-                    class="champ-page__rank-badge"
-                    :class="getRankClass(player.tier)"
-                  >
-                    {{ player.tier }} {{ player.lp }} LP
+                <td class="champ-page__td champ-page__td--name">
+                  <span class="champ-page__player-name">
+                    {{ getPlayerName(player.gameName) }}
                   </span>
+                  <span class="champ-page__player-tag">
+                    #{{ getPlayerTag(player.gameName) }}
+                  </span>
+                </td>
+                <td class="champ-page__td champ-page__td--lp">
+                  {{ player.lp }} LP
+                </td>
+                <td class="champ-page__td champ-page__td--games">
+                  {{ player.wins + player.losses }}
                 </td>
                 <td
-                  class="champ-page__td"
-                  :class="player.winRate >= 60 ? 'champ-page__td--high-wr' : ''"
+                  class="champ-page__td champ-page__td--wr"
+                  :class="{
+                    'champ-page__td--high-wr': player.winRate >= 60,
+                  }"
                 >
                   {{ player.winRate }}%
-                </td>
-                <td class="champ-page__td champ-page__td--mastery">
-                  <span class="champ-page__mastery-level">
-                    Lvl {{ player.masteryLevel }}
-                  </span>
-                  {{ formatMastery(player.masteryPoints) }}
                 </td>
               </tr>
             </tbody>
@@ -107,13 +123,11 @@
         class="champ-page__empty"
       >
         <p>
-          Не найдено OTP игроков на {{ champion?.name ?? championId }} в регионе
+          Не найдено OTP игроков на
+          {{ champion?.name ?? championId }} в регионе
           {{ selectedRegion.toUpperCase() }}.
         </p>
-        <p class="champ-page__empty-hint">
-          Попробуй другой регион — чемпион может быть популярнее в другом
-          регионе.
-        </p>
+        <p class="champ-page__empty-hint">Попробуй другой регион.</p>
       </div>
     </div>
   </div>
@@ -121,13 +135,33 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { REGIONS, getChampionImageUrl } from '~/src/shared/config'
+import { getChampionImageUrl, getRankedEmblemUrl } from '~/src/shared/config'
 import type { RegionCode } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
 import type { ChampionPlayersResponse, ChampionPlayer } from '~/src/shared/api'
 
-const router = useRouter()
+interface RegionGroup {
+  id: string
+  name: string
+  regions: RegionCode[]
+}
 
+const regionGroups: RegionGroup[] = [
+  { id: 'major', name: 'Major', regions: ['kr', 'euw', 'na'] },
+  {
+    id: 'europe',
+    name: 'Europe',
+    regions: ['euw', 'eune', 'tr', 'ru'],
+  },
+  { id: 'asia', name: 'Asia', regions: ['kr', 'jp'] },
+  {
+    id: 'americas',
+    name: 'Americas',
+    regions: ['na', 'br', 'lan', 'las', 'oce'],
+  },
+]
+
+const router = useRouter()
 const route = useRoute()
 const championId = route.params['id'] as string
 
@@ -137,14 +171,20 @@ const champion = CHAMPIONS.find(
 
 useHead({
   title: champion
-    ? `${champion.name} — OTP игроки | LoL Tricks`
-    : `${championId} — OTP игроки | LoL Tricks`,
+    ? `${champion.name} — One Trick Ranking | LoL Tricks`
+    : `${championId} — One Trick Ranking | LoL Tricks`,
 })
 
-const selectedRegion = ref<RegionCode>('euw')
+const selectedGroup = ref('major')
+const selectedRegion = ref<RegionCode>('kr')
 const loading = ref(false)
 const error = ref<string | null>(null)
 const players = ref<ChampionPlayer[] | null>(null)
+
+const currentRegions = computed(() => {
+  const group = regionGroups.find((g) => g.id === selectedGroup.value)
+  return group?.regions ?? []
+})
 
 const errorMessage = computed(() => {
   if (!error.value) return ''
@@ -160,14 +200,26 @@ const errorMessage = computed(() => {
   return `Ошибка: ${error.value}`
 })
 
-function formatMastery(points: number): string {
-  if (points >= 1_000_000) {
-    return `${(points / 1_000_000).toFixed(1)}M`
+function selectGroup(groupId: string): void {
+  selectedGroup.value = groupId
+  const group = regionGroups.find((g) => g.id === groupId)
+  if (!group) return
+  const firstRegion = group.regions[0]
+  if (firstRegion && !group.regions.includes(selectedRegion.value)) {
+    selectedRegion.value = firstRegion
   }
-  if (points >= 1_000) {
-    return `${Math.round(points / 1_000)}K`
-  }
-  return String(points)
+}
+
+function selectRegion(region: RegionCode): void {
+  selectedRegion.value = region
+}
+
+function getPlayerName(gameName: string): string {
+  return gameName.split('#')[0] ?? gameName
+}
+
+function getPlayerTag(gameName: string): string {
+  return gameName.split('#')[1] ?? ''
 }
 
 async function loadPlayers(): Promise<void> {
@@ -202,13 +254,6 @@ async function loadPlayers(): Promise<void> {
   } finally {
     loading.value = false
   }
-}
-
-function getRankClass(tier: string): string {
-  const lower = tier.toLowerCase()
-  if (lower === 'challenger') return 'champ-page__rank-badge--challenger'
-  if (lower === 'grandmaster') return 'champ-page__rank-badge--grandmaster'
-  return 'champ-page__rank-badge--master'
 }
 
 function openPlayerBuilds(player: ChampionPlayer): void {
@@ -258,12 +303,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .champ-page__icon {
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   border: 2px solid rgba(200, 155, 60, 0.4);
 }
@@ -274,66 +319,79 @@ onMounted(() => {
 }
 
 .champ-page__name {
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: #f0e6d2;
   line-height: 1.2;
 }
 
 .champ-page__title {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: #6a6a7a;
 }
 
-.champ-page__controls {
+/* Filters */
+.champ-page__filters {
+  margin-bottom: 1.5rem;
+}
+
+.champ-page__region-groups {
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
 }
 
-.champ-page__select {
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(200, 155, 60, 0.2);
-  border-radius: 10px;
-  color: #e0e0e0;
-  font-size: 0.9rem;
-  outline: none;
-  cursor: pointer;
-}
-
-.champ-page__select:focus {
-  border-color: rgba(200, 155, 60, 0.5);
-}
-
-.champ-page__select option {
-  background: #1a1a2e;
-  color: #e0e0e0;
-}
-
-.champ-page__btn {
-  padding: 10px 24px;
-  background: linear-gradient(135deg, #c89b3c, #a07830);
+.champ-page__group-tab {
+  padding: 8px 18px;
+  background: transparent;
   border: none;
-  border-radius: 10px;
-  color: #0a0a0f;
+  border-radius: 8px;
+  color: #6a6a7a;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
-.champ-page__btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #d4a84a, #b08838);
-  transform: translateY(-1px);
+.champ-page__group-tab:hover {
+  color: #e0e0e0;
 }
 
-.champ-page__btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.champ-page__group-tab--active {
+  background: #2563eb;
+  color: #fff;
 }
 
+.champ-page__region-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.champ-page__region-tab {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #6a6a7a;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.champ-page__region-tab:hover {
+  color: #e0e0e0;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.champ-page__region-tab--active {
+  color: #e0e0e0;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Loading */
 .champ-page__loading {
   text-align: center;
   padding: 3rem 1rem;
@@ -372,17 +430,11 @@ onMounted(() => {
   margin-bottom: 1rem;
 }
 
-.champ-page__results-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #8a8a9a;
-  margin-bottom: 1rem;
-}
-
+/* Table */
 .champ-page__table-wrapper {
   overflow-x: auto;
   border-radius: 12px;
-  border: 1px solid rgba(200, 155, 60, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .champ-page__table {
@@ -393,92 +445,101 @@ onMounted(() => {
 
 .champ-page__th {
   text-align: left;
-  padding: 12px 16px;
+  padding: 10px 14px;
   color: #6a6a7a;
   font-weight: 600;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: rgba(200, 155, 60, 0.05);
-  border-bottom: 1px solid rgba(200, 155, 60, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   white-space: nowrap;
 }
 
 .champ-page__th--rank {
-  width: 40px;
+  width: 36px;
   text-align: center;
 }
 
-.champ-page__row {
-  transition: background 0.15s;
+.champ-page__th--tier {
+  width: 50px;
+  text-align: center;
 }
 
-.champ-page__row--clickable {
+.champ-page__th--lp {
+  text-align: right;
+}
+
+.champ-page__th--games {
+  text-align: center;
+}
+
+.champ-page__th--wr {
+  text-align: right;
+}
+
+.champ-page__row {
   cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .champ-page__row:hover {
-  background: rgba(200, 155, 60, 0.05);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .champ-page__td {
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 10px 14px;
   white-space: nowrap;
 }
 
 .champ-page__td--rank {
   text-align: center;
   color: #6a6a7a;
-  font-weight: 700;
+  font-weight: 600;
+}
+
+.champ-page__td--tier {
+  text-align: center;
+}
+
+.champ-page__tier-icon {
+  width: 32px;
+  height: 32px;
 }
 
 .champ-page__td--name {
   font-weight: 600;
+}
+
+.champ-page__player-name {
+  color: #4a9eff;
+}
+
+.champ-page__player-tag {
+  color: #6a6a7a;
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.champ-page__td--lp {
+  text-align: right;
+  font-weight: 600;
   color: #e0e0e0;
+}
+
+.champ-page__td--games {
+  text-align: center;
+  color: #8a8a9a;
+}
+
+.champ-page__td--wr {
+  text-align: right;
+  color: #8a8a9a;
 }
 
 .champ-page__td--high-wr {
   color: #4ec97a;
   font-weight: 600;
-}
-
-.champ-page__td--mastery {
-  color: #c89b3c;
-  font-weight: 700;
-}
-
-.champ-page__mastery-level {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #8a8a9a;
-  background: rgba(255, 255, 255, 0.06);
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-right: 6px;
-}
-
-.champ-page__rank-badge {
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
-}
-
-.champ-page__rank-badge--challenger {
-  color: #f0c040;
-  background: rgba(240, 192, 64, 0.1);
-}
-
-.champ-page__rank-badge--grandmaster {
-  color: #e05050;
-  background: rgba(224, 80, 80, 0.1);
-}
-
-.champ-page__rank-badge--master {
-  color: #b060e0;
-  background: rgba(176, 96, 224, 0.1);
 }
 
 .champ-page__empty {
@@ -495,12 +556,30 @@ onMounted(() => {
 
 @media (max-width: 640px) {
   .champ-page__name {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
 
   .champ-page__icon {
-    width: 56px;
-    height: 56px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .champ-page__group-tab {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .champ-page__region-tab {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+
+  .champ-page__td--games {
+    display: none;
+  }
+
+  .champ-page__th--games {
+    display: none;
   }
 }
 </style>
