@@ -24,6 +24,11 @@
             {{ r.name }}
           </option>
         </select>
+        <select v-model="selectedTier" class="champ-page__select">
+          <option value="challenger">Challenger</option>
+          <option value="grandmaster">Grandmaster</option>
+          <option value="master">Master</option>
+        </select>
         <button
           class="champ-page__btn"
           :disabled="loading"
@@ -37,7 +42,7 @@
         <div class="champ-page__spinner" />
         <p>Ищем игроков на {{ champion?.name ?? championId }}...</p>
         <p class="champ-page__loading-hint">
-          Анализируем матчи Challenger, Grandmaster и Master игроков
+          Анализируем матчи {{ selectedTier }} игроков
         </p>
       </div>
 
@@ -144,6 +149,7 @@ useHead({
 })
 
 const selectedRegion = ref<RegionCode>('euw')
+const selectedTier = ref('challenger')
 const loading = ref(false)
 const error = ref<string | null>(null)
 const players = ref<ChampionPlayer[] | null>(null)
@@ -170,6 +176,7 @@ async function loadPlayers(): Promise<void> {
         query: {
           champion: championId,
           region: selectedRegion.value,
+          tier: selectedTier.value,
         },
       },
     )
