@@ -53,18 +53,14 @@ export interface ChampionPlayer {
   wins: number
   losses: number
   winRate: number
-  gamesOnChampion: number
-  totalGames: number
-  championPercent: number
+  masteryPoints: number
+  masteryLevel: number
 }
 
 export interface ChampionPlayersResponse {
   champion: string
   region: string
-  tier: string
   players: ChampionPlayer[]
-  cached?: boolean
-  updatedAt?: number | null
 }
 
 export function useOtpApi(region: RegionCode, tier = 'challenger', limit = 10) {
