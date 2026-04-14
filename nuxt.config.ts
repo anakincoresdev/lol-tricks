@@ -36,6 +36,11 @@ export default defineNuxtConfig({
   runtimeConfig: {
     riotApiKey: process.env['RIOT_API_KEY'] ?? '',
     cronSecret: process.env['CRON_SECRET'] ?? '',
+    public: {
+      // When set, the frontend calls the external lol-tricks-api instead
+      // of the Nuxt server routes. Example: https://lol-tricks-api.vercel.app
+      apiBase: process.env['NUXT_PUBLIC_API_BASE'] ?? '',
+    },
   },
 
   nitro: {

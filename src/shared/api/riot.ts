@@ -45,16 +45,25 @@ export function useLeagueApi(tier: string, region: RegionCode) {
   })
 }
 
+export interface PlayerRuneInfo {
+  keystone: number
+  primaryStyle: number
+  secondaryStyle: number
+}
+
 export interface ChampionPlayer {
   puuid: string
   gameName: string
+  region?: string
   tier: string
+  rank?: string
   lp: number
   wins: number
   losses: number
   winRate: number
   masteryPoints: number
   masteryLevel: number
+  runes?: PlayerRuneInfo | null
 }
 
 export interface ChampionPlayersResponse {

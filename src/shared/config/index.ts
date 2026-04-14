@@ -15,4 +15,6 @@ export {
   getChampionLoadingUrl,
   getItemImageUrl,
   getRankedEmblemUrl,
+  getKeystoneIconUrl,
+  getRuneStyleIconUrl,
 } from './ddragon'

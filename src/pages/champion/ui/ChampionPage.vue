@@ -74,12 +74,13 @@
           <table class="champ-page__table">
             <thead>
               <tr>
-                <th class="champ-page__th champ-page__th--rank" />
-                <th class="champ-page__th champ-page__th--tier">Tier</th>
-                <th class="champ-page__th">Player</th>
-                <th class="champ-page__th champ-page__th--lp">LP &#9660;</th>
-                <th class="champ-page__th champ-page__th--games">И</th>
+                <th class="champ-page__th champ-page__th--rank">#</th>
+                <th class="champ-page__th">Игрок</th>
+                <th class="champ-page__th champ-page__th--center">Регион</th>
+                <th class="champ-page__th champ-page__th--rank-col">Ранг</th>
+                <th class="champ-page__th champ-page__th--games">Игры</th>
                 <th class="champ-page__th champ-page__th--wr">WR</th>
+                <th class="champ-page__th champ-page__th--runes">Руны</th>
               </tr>
             </thead>
             <tbody>
@@ -92,34 +93,90 @@
                 <td class="champ-page__td champ-page__td--rank">
                   {{ index + 1 }}
                 </td>
-                <td class="champ-page__td champ-page__td--tier">
-                  <img
-                    :src="getRankedEmblemUrl(player.tier)"
-                    :alt="player.tier"
-                    class="champ-page__tier-icon"
-                  />
-                </td>
+
                 <td class="champ-page__td champ-page__td--name">
-                  <span class="champ-page__player-name">
-                    {{ getPlayerName(player.gameName) }}
-                  </span>
-                  <span class="champ-page__player-tag">
-                    #{{ getPlayerTag(player.gameName) }}
+                  <div class="champ-page__player">
+                    <span class="champ-page__player-name">
+                      {{ getPlayerName(player.gameName) }}
+                    </span>
+                    <span class="champ-page__player-tag">
+                      #{{ getPlayerTag(player.gameName) }}
+                    </span>
+                  </div>
+                </td>
+
+                <td class="champ-page__td champ-page__td--center">
+                  <span class="champ-page__region-badge">
+                    {{ player.playerRegion.toUpperCase() }}
                   </span>
                 </td>
-                <td class="champ-page__td champ-page__td--lp">
-                  {{ player.lp }} LP
+
+                <td class="champ-page__td champ-page__td--tier-cell">
+                  <div class="champ-page__tier-cell">
+                    <img
+                      :src="getRankedEmblemUrl(player.tier)"
+                      :alt="player.tier"
+                      class="champ-page__tier-icon"
+                    />
+                    <div class="champ-page__tier-meta">
+                      <span class="champ-page__tier-name">
+                        {{ formatTier(player.tier) }}
+                      </span>
+                      <span class="champ-page__tier-lp">
+                        {{ player.lp.toLocaleString('ru-RU') }} LP
+                      </span>
+                    </div>
+                  </div>
                 </td>
+
                 <td class="champ-page__td champ-page__td--games">
-                  {{ player.wins + player.losses }}
+                  <div class="champ-page__games">
+                    <span class="champ-page__games-total">
+                      {{ player.wins + player.losses }}
+                    </span>
+                    <span class="champ-page__games-wl">
+                      <span class="champ-page__games-w">{{ player.wins }}В</span>
+                      <span class="champ-page__games-sep">·</span>
+                      <span class="champ-page__games-l">{{ player.losses }}П</span>
+                    </span>
+                  </div>
                 </td>
+
                 <td
                   class="champ-page__td champ-page__td--wr"
                   :class="{
                     'champ-page__td--high-wr': player.winRate >= 60,
+                    'champ-page__td--low-wr': player.winRate < 50,
                   }"
                 >
                   {{ player.winRate }}%
+                </td>
+
+                <td class="champ-page__td champ-page__td--runes">
+                  <div v-if="player.runes" class="champ-page__runes">
+                    <div
+                      class="champ-page__rune champ-page__rune--primary"
+                      :title="`Keystone ${player.runes.keystone}`"
+                    >
+                      <img
+                        :src="getKeystoneIconUrl(player.runes.keystone)"
+                        alt="Keystone"
+                        class="champ-page__rune-icon"
+                      />
+                    </div>
+                    <div
+                      v-if="player.runes.secondaryStyle"
+                      class="champ-page__rune champ-page__rune--secondary"
+                      :title="`Secondary ${player.runes.secondaryStyle}`"
+                    >
+                      <img
+                        :src="getRuneStyleIconUrl(player.runes.secondaryStyle)"
+                        alt="Secondary tree"
+                        class="champ-page__rune-icon champ-page__rune-icon--small"
+                      />
+                    </div>
+                  </div>
+                  <span v-else class="champ-page__runes-empty">—</span>
                 </td>
               </tr>
             </tbody>
@@ -143,7 +200,12 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { getChampionImageUrl, getRankedEmblemUrl } from '~/src/shared/config'
+import {
+  getChampionImageUrl,
+  getRankedEmblemUrl,
+  getKeystoneIconUrl,
+  getRuneStyleIconUrl,
+} from '~/src/shared/config'
 import type { RegionCode } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
 import type { ChampionPlayersResponse, ChampionPlayer } from '~/src/shared/api'
@@ -229,14 +291,35 @@ function getPlayerTag(gameName: string): string {
   return gameName.split('#')[1] ?? ''
 }
 
+function formatTier(tier: string): string {
+  if (!tier) return ''
+  const t = tier.toLowerCase()
+  const labels: Record<string, string> = {
+    challenger: 'Challenger',
+    grandmaster: 'Grandmaster',
+    master: 'Master',
+    diamond: 'Diamond',
+    emerald: 'Emerald',
+    platinum: 'Platinum',
+    gold: 'Gold',
+    silver: 'Silver',
+    bronze: 'Bronze',
+    iron: 'Iron',
+  }
+  return labels[t] ?? tier
+}
+
+const runtime = useRuntimeConfig()
+const apiBase = (runtime.public['apiBase'] as string) || ''
+
 async function fetchRegion(region: RegionCode): Promise<PlayerWithRegion[]> {
-  const response = await $fetch<ChampionPlayersResponse>(
-    '/api/riot/champion-players',
-    {
-      query: { champion: championId, region },
-      timeout: 15000,
-    },
-  )
+  const url = apiBase
+    ? `${apiBase}/api/riot/champion-players`
+    : '/api/riot/champion-players'
+  const response = await $fetch<ChampionPlayersResponse>(url, {
+    query: { champion: championId, region },
+    timeout: 15000,
+  })
   return response.players.map((p) => ({ ...p, playerRegion: region }))
 }
 
@@ -320,7 +403,7 @@ onMounted(() => {
 }
 
 .champ-page__container {
-  max-width: 900px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
 }
@@ -474,6 +557,7 @@ onMounted(() => {
   overflow-x: auto;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.015);
 }
 
 .champ-page__table {
@@ -484,36 +568,44 @@ onMounted(() => {
 
 .champ-page__th {
   text-align: left;
-  padding: 10px 14px;
+  padding: 12px 16px;
   color: #6a6a7a;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   white-space: nowrap;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .champ-page__th--rank {
-  width: 36px;
+  width: 44px;
   text-align: center;
 }
 
-.champ-page__th--tier {
-  width: 50px;
+.champ-page__th--center {
   text-align: center;
+  width: 80px;
 }
 
-.champ-page__th--lp {
-  text-align: right;
+.champ-page__th--rank-col {
+  width: 180px;
 }
 
 .champ-page__th--games {
   text-align: center;
+  width: 110px;
 }
 
 .champ-page__th--wr {
   text-align: right;
+  width: 70px;
+}
+
+.champ-page__th--runes {
+  text-align: center;
+  width: 88px;
 }
 
 .champ-page__row {
@@ -522,63 +614,187 @@ onMounted(() => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
+.champ-page__row:last-child {
+  border-bottom: none;
+}
+
 .champ-page__row:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(200, 155, 60, 0.04);
 }
 
 .champ-page__td {
-  padding: 10px 14px;
+  padding: 12px 16px;
+  vertical-align: middle;
   white-space: nowrap;
 }
 
 .champ-page__td--rank {
   text-align: center;
   color: #6a6a7a;
-  font-weight: 600;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-.champ-page__td--tier {
+.champ-page__td--center {
   text-align: center;
 }
 
-.champ-page__tier-icon {
-  width: 32px;
-  height: 32px;
-}
-
-.champ-page__td--name {
-  font-weight: 600;
+.champ-page__player {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
 }
 
 .champ-page__player-name {
   color: #4a9eff;
+  font-weight: 600;
 }
 
 .champ-page__player-tag {
-  color: #6a6a7a;
+  color: #5a5a6a;
   font-weight: 400;
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.champ-page__region-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(200, 155, 60, 0.1);
+  color: #c89b3c;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.champ-page__tier-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.champ-page__tier-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.champ-page__tier-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.champ-page__tier-name {
+  color: #e0e0e0;
+  font-weight: 600;
   font-size: 0.85rem;
 }
 
-.champ-page__td--lp {
-  text-align: right;
-  font-weight: 600;
-  color: #e0e0e0;
+.champ-page__tier-lp {
+  color: #8a8a9a;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .champ-page__td--games {
   text-align: center;
-  color: #8a8a9a;
+}
+
+.champ-page__games {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+
+.champ-page__games-total {
+  color: #e0e0e0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.champ-page__games-wl {
+  font-size: 0.72rem;
+  color: #6a6a7a;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.champ-page__games-w {
+  color: #4ec97a;
+}
+
+.champ-page__games-l {
+  color: #e06868;
+}
+
+.champ-page__games-sep {
+  margin: 0 3px;
+  color: #3a3a4a;
 }
 
 .champ-page__td--wr {
   text-align: right;
   color: #8a8a9a;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .champ-page__td--high-wr {
   color: #4ec97a;
-  font-weight: 600;
+}
+
+.champ-page__td--low-wr {
+  color: #e06868;
+}
+
+.champ-page__td--runes {
+  text-align: center;
+}
+
+.champ-page__runes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.champ-page__rune {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+}
+
+.champ-page__rune--primary {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(200, 155, 60, 0.3);
+}
+
+.champ-page__rune--secondary {
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.champ-page__rune-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.champ-page__rune-icon--small {
+  width: 70%;
+  height: 70%;
+}
+
+.champ-page__runes-empty {
+  color: #3a3a4a;
+  font-size: 0.9rem;
 }
 
 .champ-page__empty {
@@ -591,6 +807,22 @@ onMounted(() => {
   font-size: 0.85rem;
   margin-top: 0.5rem;
   color: #4a4a5a;
+}
+
+@media (max-width: 820px) {
+  .champ-page__th--runes,
+  .champ-page__td--runes {
+    display: none;
+  }
+
+  .champ-page__th--games,
+  .champ-page__td--games {
+    width: auto;
+  }
+
+  .champ-page__games-wl {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
@@ -613,11 +845,17 @@ onMounted(() => {
     font-size: 0.8rem;
   }
 
-  .champ-page__td--games {
+  .champ-page__th,
+  .champ-page__td {
+    padding: 10px 10px;
+  }
+
+  .champ-page__th--center,
+  .champ-page__td--center {
     display: none;
   }
 
-  .champ-page__th--games {
+  .champ-page__tier-meta {
     display: none;
   }
 }

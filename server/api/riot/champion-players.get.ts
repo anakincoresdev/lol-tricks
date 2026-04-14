@@ -8,6 +8,7 @@ import type {
   LeagueEntry,
   ChampionMasteryDto,
   AccountDto,
+  MatchDto,
 } from '~/server/utils/riot-types'
 
 interface DDragonChampionEntry {
@@ -20,16 +21,25 @@ interface DDragonResponse {
   data: Record<string, DDragonChampionEntry>
 }
 
+interface PlayerRuneInfo {
+  keystone: number
+  primaryStyle: number
+  secondaryStyle: number
+}
+
 interface ChampionPlayerResult {
   puuid: string
   gameName: string
+  region: string
   tier: string
+  rank: string
   lp: number
   wins: number
   losses: number
   winRate: number
   masteryPoints: number
   masteryLevel: number
+  runes: PlayerRuneInfo | null
 }
 
 function delay(ms: number): Promise<void> {
@@ -80,6 +90,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const champion = (query['champion'] as string) ?? ''
   const region = (query['region'] as string) ?? 'euw'
+  const withRunes = query['runes'] !== 'false'
 
   if (!champion) {
     throw createError({
@@ -88,7 +99,6 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Get numeric champion ID from DDragon
   const championNumericId = await getChampionNumericId(champion)
   if (!championNumericId) {
     throw createError({
@@ -100,7 +110,7 @@ export default defineEventHandler(async (event) => {
   const platformHost = getPlatformHost(region)
   const regionalHost = getRegionalHost(region)
 
-  // Fetch all 3 tiers in parallel
+  // 1. Pull all three apex tiers in parallel
   const tiers = ['challenger', 'grandmaster', 'master'] as const
   const leagueResults = await Promise.all(
     tiers.map((tier) =>
@@ -111,7 +121,6 @@ export default defineEventHandler(async (event) => {
     ),
   )
 
-  // Merge all players with tier info, sort by LP, take top 50
   const allEntries: (LeagueEntry & { tierName: string })[] = []
   for (const league of leagueResults) {
     for (const entry of league.entries) {
@@ -119,11 +128,12 @@ export default defineEventHandler(async (event) => {
     }
   }
   allEntries.sort((a, b) => b.leaguePoints - a.leaguePoints)
-  const topPlayers = allEntries.slice(0, 50)
+  // Scan top 60 players: tight enough for Vercel 10s budget
+  const topPlayers = allEntries.slice(0, 60)
 
-  await delay(200)
+  await delay(150)
 
-  // Batch check champion mastery for all 50 players
+  // 2. Champion mastery lookup
   const masteryResults = await batchRequests(
     topPlayers.map(
       (player) => () =>
@@ -133,11 +143,9 @@ export default defineEventHandler(async (event) => {
         ),
     ),
     10,
-    250,
+    220,
   )
 
-  // Filter players who actually main this champion
-  // 50 000 mastery points ≈ 30-50+ games played
   const MIN_MASTERY_POINTS = 50_000
 
   const matchedPlayers: {
@@ -153,14 +161,12 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Sort by LP descending (matching onetricks.gg behavior)
   matchedPlayers.sort((a, b) => b.entry.leaguePoints - a.entry.leaguePoints)
-
-  // Get display names for matched players (top 20 max)
   const toResolve = matchedPlayers.slice(0, 20)
 
-  await delay(200)
+  await delay(150)
 
+  // 3. Account names — batched
   const accountResults = await batchRequests(
     toResolve.map(
       ({ entry }) =>
@@ -171,12 +177,80 @@ export default defineEventHandler(async (event) => {
           ),
     ),
     10,
-    250,
+    200,
   )
 
-  // Build final response
-  const players: ChampionPlayerResult[] = []
+  // 4. Fetch recent match runes for the top slice (best-effort, must fit timeout)
+  const runeMap = new Map<string, PlayerRuneInfo>()
+  if (withRunes) {
+    const runeSlice = toResolve.slice(0, 15)
 
+    await delay(150)
+
+    const recentIds = await batchRequests(
+      runeSlice.map(
+        ({ entry }) =>
+          () =>
+            riotFetch<string[]>(
+              regionalHost,
+              `/lol/match/v5/matches/by-puuid/${entry.puuid}/ids?queue=420&count=3`,
+            ),
+      ),
+      10,
+      200,
+    )
+
+    // For each player pick the most recent ranked match id (if any)
+    const matchFetches: { puuid: string; matchId: string }[] = []
+    runeSlice.forEach(({ entry }, idx) => {
+      const ids = recentIds[idx]
+      if (ids && ids.length > 0 && ids[0]) {
+        matchFetches.push({ puuid: entry.puuid, matchId: ids[0] })
+      }
+    })
+
+    if (matchFetches.length > 0) {
+      await delay(150)
+      const matches = await batchRequests(
+        matchFetches.map(
+          ({ matchId }) =>
+            () =>
+              riotFetch<MatchDto>(
+                regionalHost,
+                `/lol/match/v5/matches/${matchId}`,
+              ),
+        ),
+        10,
+        200,
+      )
+
+      matches.forEach((match, idx) => {
+        if (!match) return
+        const spec = matchFetches[idx]
+        if (!spec) return
+        const me = match.info.participants.find((p) => p.puuid === spec.puuid)
+        if (!me || !me.perks || me.perks.styles.length === 0) return
+
+        const primary = me.perks.styles.find((s) => s.description === 'primaryStyle')
+          ?? me.perks.styles[0]
+        const secondary = me.perks.styles.find((s) => s.description === 'subStyle')
+          ?? me.perks.styles[1]
+        if (!primary) return
+
+        const keystonePerk = primary.selections[0]?.perk
+        if (!keystonePerk) return
+
+        runeMap.set(spec.puuid, {
+          keystone: keystonePerk,
+          primaryStyle: primary.style,
+          secondaryStyle: secondary?.style ?? 0,
+        })
+      })
+    }
+  }
+
+  // 5. Assemble the response
+  const players: ChampionPlayerResult[] = []
   for (let i = 0; i < toResolve.length; i++) {
     const item = toResolve[i]
     if (!item) continue
@@ -189,13 +263,16 @@ export default defineEventHandler(async (event) => {
     players.push({
       puuid: entry.puuid,
       gameName,
+      region,
       tier: entry.tierName,
+      rank: entry.rank ?? 'I',
       lp: entry.leaguePoints,
       wins: entry.wins,
       losses: entry.losses,
       winRate: Math.round((entry.wins / (entry.wins + entry.losses)) * 100),
       masteryPoints: mastery.championPoints,
       masteryLevel: mastery.championLevel,
+      runes: runeMap.get(entry.puuid) ?? null,
     })
   }
 
