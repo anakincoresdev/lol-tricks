@@ -107,6 +107,7 @@
 import { ref, computed } from 'vue'
 import { REGIONS, getChampionImageUrl } from '~/src/shared/config'
 import type { RegionCode } from '~/src/shared/config'
+import { buildApiUrl } from '~/src/shared/api'
 import type { OtpResponse } from '~/src/shared/api'
 
 const selectedRegion = ref<RegionCode>('euw')
@@ -133,7 +134,7 @@ async function load(): Promise<void> {
   error.value = null
 
   try {
-    const response = await $fetch<OtpResponse>('/api/riot/otp', {
+    const response = await $fetch<OtpResponse>(buildApiUrl('/api/riot/otp'), {
       query: {
         region: selectedRegion.value,
         tier: selectedTier.value,

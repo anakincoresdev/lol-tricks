@@ -136,6 +136,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { getChampionImageUrl, getItemImageUrl } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
+import { buildApiUrl } from '~/src/shared/api'
 import type { PlayerChampionMatchesResponse } from '~/src/shared/api'
 
 const route = useRoute()
@@ -221,7 +222,7 @@ async function loadMatches(): Promise<void> {
 
   try {
     const response = await $fetch<PlayerChampionMatchesResponse>(
-      '/api/riot/player-champion-matches',
+      buildApiUrl('/api/riot/player-champion-matches'),
       {
         query: {
           puuid,

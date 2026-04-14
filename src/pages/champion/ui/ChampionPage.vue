@@ -52,6 +52,20 @@
             {{ region.toUpperCase() }}
           </button>
         </div>
+
+        <div class="champ-page__role-tabs">
+          <button
+            v-for="role in ROLES"
+            :key="role.id"
+            class="champ-page__role-tab"
+            :class="{
+              'champ-page__role-tab--active': selectedRole === role.id,
+            }"
+            @click="selectedRole = role.id"
+          >
+            {{ role.name }}
+          </button>
+        </div>
       </div>
 
       <div v-if="loading" class="champ-page__loading">
@@ -67,7 +81,12 @@
       </div>
 
       <div
-        v-if="players && players.length > 0 && !loading"
+        v-if="
+          players &&
+          players.length > 0 &&
+          filteredSortedPlayers.length > 0 &&
+          !loading
+        "
         class="champ-page__results"
       >
         <div class="champ-page__table-wrapper">
@@ -77,15 +96,39 @@
                 <th class="champ-page__th champ-page__th--rank">#</th>
                 <th class="champ-page__th">Игрок</th>
                 <th class="champ-page__th champ-page__th--center">Регион</th>
-                <th class="champ-page__th champ-page__th--rank-col">Ранг</th>
-                <th class="champ-page__th champ-page__th--games">Игры</th>
-                <th class="champ-page__th champ-page__th--wr">WR</th>
+                <th
+                  class="champ-page__th champ-page__th--rank-col champ-page__th--sortable"
+                  :class="{
+                    'champ-page__th--active': sortKey === 'lp',
+                  }"
+                  @click="toggleSort('lp')"
+                >
+                  Ранг{{ sortIndicator('lp') }}
+                </th>
+                <th
+                  class="champ-page__th champ-page__th--games champ-page__th--sortable"
+                  :class="{
+                    'champ-page__th--active': sortKey === 'games',
+                  }"
+                  @click="toggleSort('games')"
+                >
+                  Игры{{ sortIndicator('games') }}
+                </th>
+                <th
+                  class="champ-page__th champ-page__th--wr champ-page__th--sortable"
+                  :class="{
+                    'champ-page__th--active': sortKey === 'winRate',
+                  }"
+                  @click="toggleSort('winRate')"
+                >
+                  WR{{ sortIndicator('winRate') }}
+                </th>
                 <th class="champ-page__th champ-page__th--runes">Руны</th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="(player, index) in players"
+                v-for="(player, index) in filteredSortedPlayers"
                 :key="player.puuid"
                 class="champ-page__row"
                 @click="openPlayerBuilds(player)"
@@ -135,9 +178,13 @@
                       {{ player.wins + player.losses }}
                     </span>
                     <span class="champ-page__games-wl">
-                      <span class="champ-page__games-w">{{ player.wins }}В</span>
+                      <span class="champ-page__games-w">
+                        {{ player.wins }}В
+                      </span>
                       <span class="champ-page__games-sep">·</span>
-                      <span class="champ-page__games-l">{{ player.losses }}П</span>
+                      <span class="champ-page__games-l">
+                        {{ player.losses }}П
+                      </span>
                     </span>
                   </div>
                 </td>
@@ -194,6 +241,21 @@
         </p>
         <p class="champ-page__empty-hint">Попробуй другой регион.</p>
       </div>
+
+      <div
+        v-if="
+          players &&
+          players.length > 0 &&
+          filteredSortedPlayers.length === 0 &&
+          !loading
+        "
+        class="champ-page__empty"
+      >
+        <p>Нет игроков с этой ролью в выборке.</p>
+        <p class="champ-page__empty-hint">
+          Попробуй выбрать «Все» или другой лайн.
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -205,10 +267,15 @@ import {
   getRankedEmblemUrl,
   getKeystoneIconUrl,
   getRuneStyleIconUrl,
+  ROLES,
 } from '~/src/shared/config'
-import type { RegionCode } from '~/src/shared/config'
+import type { RegionCode, RoleId } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
+import { buildApiUrl } from '~/src/shared/api'
 import type { ChampionPlayersResponse, ChampionPlayer } from '~/src/shared/api'
+
+type SortKey = 'lp' | 'winRate' | 'games'
+type SortDir = 'asc' | 'desc'
 
 interface RegionGroup {
   id: string
@@ -251,6 +318,9 @@ useHead({
 
 const selectedGroup = ref('major')
 const selectedRegion = ref<RegionCode | 'all'>('all')
+const selectedRole = ref<RoleId>('all')
+const sortKey = ref<SortKey>('lp')
+const sortDir = ref<SortDir>('desc')
 const loading = ref(false)
 const error = ref<string | null>(null)
 const players = ref<PlayerWithRegion[] | null>(null)
@@ -309,18 +379,45 @@ function formatTier(tier: string): string {
   return labels[t] ?? tier
 }
 
-const runtime = useRuntimeConfig()
-const apiBase = (runtime.public['apiBase'] as string) || ''
-
 async function fetchRegion(region: RegionCode): Promise<PlayerWithRegion[]> {
-  const url = apiBase
-    ? `${apiBase}/api/riot/champion-players`
-    : '/api/riot/champion-players'
-  const response = await $fetch<ChampionPlayersResponse>(url, {
-    query: { champion: championId, region },
-    timeout: 15000,
-  })
+  const response = await $fetch<ChampionPlayersResponse>(
+    buildApiUrl('/api/riot/champion-players'),
+    {
+      query: { champion: championId, region },
+      timeout: 15000,
+    },
+  )
   return response.players.map((p) => ({ ...p, playerRegion: region }))
+}
+
+const filteredSortedPlayers = computed<PlayerWithRegion[]>(() => {
+  if (!players.value) return []
+  const filtered =
+    selectedRole.value === 'all'
+      ? players.value
+      : players.value.filter((p) => p.position === selectedRole.value)
+  const dir = sortDir.value === 'asc' ? 1 : -1
+  const key = sortKey.value
+  return [...filtered].sort((a, b) => {
+    if (key === 'games') {
+      return dir * (a.wins + a.losses - (b.wins + b.losses))
+    }
+    return dir * (a[key] - b[key])
+  })
+})
+
+function toggleSort(key: SortKey): void {
+  if (sortKey.value === key) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortKey.value = key
+    sortDir.value = 'desc'
+  }
+}
+
+function sortIndicator(key: SortKey): string {
+  if (sortKey.value !== key) return ''
+  return sortDir.value === 'asc' ? ' ↑' : ' ↓'
 }
 
 async function loadPlayers(): Promise<void> {
@@ -513,6 +610,37 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.champ-page__role-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.champ-page__role-tab {
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #8a8a9a;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.champ-page__role-tab:hover {
+  background: rgba(200, 155, 60, 0.08);
+  border-color: rgba(200, 155, 60, 0.25);
+  color: #f0e6d2;
+}
+
+.champ-page__role-tab--active {
+  background: rgba(200, 155, 60, 0.15);
+  border-color: #c89b3c;
+  color: #c89b3c;
+}
+
 /* Loading */
 .champ-page__loading {
   text-align: center;
@@ -601,6 +729,20 @@ onMounted(() => {
 .champ-page__th--wr {
   text-align: right;
   width: 70px;
+}
+
+.champ-page__th--sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.champ-page__th--sortable:hover {
+  color: #c89b3c;
+}
+
+.champ-page__th--active {
+  color: #c89b3c;
 }
 
 .champ-page__th--runes {

@@ -1,4 +1,6 @@
-import type { RegionCode } from '~/src/shared/config'
+// Shared Riot API types and helpers.
+// All calls go through the external lol-tricks-api backend — the frontend
+// never touches RIOT_API_KEY itself.
 
 export interface LeaguePlayer {
   summonerId: string
@@ -39,17 +41,13 @@ export interface OtpResponse {
   players: OtpPlayer[]
 }
 
-export function useLeagueApi(tier: string, region: RegionCode) {
-  return useFetch<LeagueResponse>(`/api/riot/league/${tier}`, {
-    query: { region },
-  })
-}
-
 export interface PlayerRuneInfo {
   keystone: number
   primaryStyle: number
   secondaryStyle: number
 }
+
+export type PlayerPosition = 'top' | 'jungle' | 'mid' | 'adc' | 'support' | null
 
 export interface ChampionPlayer {
   puuid: string
@@ -64,11 +62,13 @@ export interface ChampionPlayer {
   masteryPoints: number
   masteryLevel: number
   runes?: PlayerRuneInfo | null
+  position?: PlayerPosition
 }
 
 export interface ChampionPlayersResponse {
   champion: string
   region: string
+  source?: 'cache' | 'riot'
   players: ChampionPlayer[]
 }
 
@@ -98,8 +98,15 @@ export interface PlayerChampionMatchesResponse {
   matches: PlayerChampionMatch[]
 }
 
-export function useOtpApi(region: RegionCode, tier = 'challenger', limit = 10) {
-  return useFetch<OtpResponse>('/api/riot/otp', {
-    query: { region, tier, limit },
-  })
+/**
+ * Build a full URL to the lol-tricks-api backend.
+ * NUXT_PUBLIC_API_BASE is required — nuxt.config.ts defaults it to
+ * http://localhost:3000 for local dev.
+ */
+export function buildApiUrl(path: string): string {
+  const runtime = useRuntimeConfig()
+  const base = (runtime.public['apiBase'] as string) ?? ''
+  const normalisedBase = base.replace(/\/+$/, '')
+  const normalisedPath = path.startsWith('/') ? path : `/${path}`
+  return `${normalisedBase}${normalisedPath}`
 }

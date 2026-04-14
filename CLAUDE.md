@@ -37,11 +37,9 @@ pages/index.vue         → imports src/pages/home/ui/HomePage.vue
 pages/champion/[id].vue → imports src/pages/champion/ui/ChampionPage.vue
 ```
 
-### Server API (`server/`)
+### External API backend
 
-Nitro server routes under `server/api/riot/` proxy Riot Games API calls. `server/utils/riot-client.ts` provides `riotFetch<T>(host, path)` with rate-limit handling. API key comes from `runtimeConfig.riotApiKey` (env var `RIOT_API_KEY`).
-
-Endpoints add delays (100-200ms) between Riot API calls to respect rate limits and stay within Vercel's 10-second function timeout.
+All Riot Games API calls go through the external **lol-tricks-api** backend — this app never holds `RIOT_API_KEY`. The URL of the backend is read from `runtimeConfig.public.apiBase` (env `NUXT_PUBLIC_API_BASE`, default `http://localhost:3000` for dev). Use the `buildApiUrl('/api/riot/...')` helper from `src/shared/api` to compose full URLs inside `$fetch`/`useFetch` calls.
 
 ## Code Style
 
@@ -53,4 +51,4 @@ Endpoints add delays (100-200ms) between Riot API calls to respect rate limits a
 
 ## Deployment
 
-Vercel with `nitro: { preset: 'vercel' }`. Requires `RIOT_API_KEY` environment variable.
+Vercel with `nitro: { preset: 'vercel' }`. Requires `NUXT_PUBLIC_API_BASE` pointing at the deployed lol-tricks-api (e.g. `https://lol-tricks-api.vercel.app`).

@@ -1,12 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/riot/collect?region=euw&tier=challenger",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/riot/collect?region=euw&tier=grandmaster",
-      "schedule": "0 18 * * *"
-    }
-  ]
-}
+{}
