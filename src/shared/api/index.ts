@@ -9,6 +9,7 @@ export type {
   PlayerPosition,
   ChampionPlayer,
   ChampionPlayersResponse,
+  ChampionPlayersMultiResponse,
   PlayerChampionMatch,
   PlayerChampionMatchesResponse,
 } from './riot'

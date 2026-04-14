@@ -72,6 +72,17 @@ export interface ChampionPlayersResponse {
   players: ChampionPlayer[]
 }
 
+export interface ChampionPlayersMultiResponse {
+  champion: string
+  regions: string[]
+  byRegion: Record<
+    string,
+    { source: 'cache' | 'riot'; players: ChampionPlayer[] }
+  >
+  allPlayers: ChampionPlayer[]
+  errors?: Record<string, string>
+}
+
 export interface PlayerChampionMatch {
   matchId: string
   win: boolean

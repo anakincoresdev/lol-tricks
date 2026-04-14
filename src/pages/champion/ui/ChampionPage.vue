@@ -150,7 +150,7 @@
 
                 <td class="champ-page__td champ-page__td--center">
                   <span class="champ-page__region-badge">
-                    {{ player.playerRegion.toUpperCase() }}
+                    {{ (player.region ?? '').toUpperCase() }}
                   </span>
                 </td>
 
@@ -272,7 +272,11 @@ import {
 import type { RegionCode, RoleId } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
 import { buildApiUrl } from '~/src/shared/api'
-import type { ChampionPlayersResponse, ChampionPlayer } from '~/src/shared/api'
+import type {
+  ChampionPlayersResponse,
+  ChampionPlayersMultiResponse,
+  ChampionPlayer,
+} from '~/src/shared/api'
 
 type SortKey = 'lp' | 'winRate' | 'games'
 type SortDir = 'asc' | 'desc'
@@ -281,10 +285,6 @@ interface RegionGroup {
   id: string
   name: string
   regions: RegionCode[]
-}
-
-interface PlayerWithRegion extends ChampionPlayer {
-  playerRegion: RegionCode
 }
 
 const regionGroups: RegionGroup[] = [
@@ -323,7 +323,7 @@ const sortKey = ref<SortKey>('lp')
 const sortDir = ref<SortDir>('desc')
 const loading = ref(false)
 const error = ref<string | null>(null)
-const players = ref<PlayerWithRegion[] | null>(null)
+const players = ref<ChampionPlayer[] | null>(null)
 
 const currentRegions = computed(() => {
   const group = regionGroups.find((g) => g.id === selectedGroup.value)
@@ -379,18 +379,29 @@ function formatTier(tier: string): string {
   return labels[t] ?? tier
 }
 
-async function fetchRegion(region: RegionCode): Promise<PlayerWithRegion[]> {
+async function fetchRegion(region: RegionCode): Promise<ChampionPlayer[]> {
   const response = await $fetch<ChampionPlayersResponse>(
     buildApiUrl('/api/riot/champion-players'),
     {
       query: { champion: championId, region },
-      timeout: 15000,
+      timeout: 45000,
     },
   )
-  return response.players.map((p) => ({ ...p, playerRegion: region }))
+  return response.players.map((p) => ({ ...p, region: p.region ?? region }))
 }
 
-const filteredSortedPlayers = computed<PlayerWithRegion[]>(() => {
+async function fetchMulti(regions: RegionCode[]): Promise<ChampionPlayer[]> {
+  const response = await $fetch<ChampionPlayersMultiResponse>(
+    buildApiUrl('/api/riot/champion-players/multi'),
+    {
+      query: { champion: championId, regions: regions.join(',') },
+      timeout: 60000,
+    },
+  )
+  return response.allPlayers
+}
+
+const filteredSortedPlayers = computed<ChampionPlayer[]>(() => {
   if (!players.value) return []
   const filtered =
     selectedRole.value === 'all'
@@ -426,20 +437,10 @@ async function loadPlayers(): Promise<void> {
 
   try {
     if (selectedRegion.value === 'all') {
-      const regions = currentRegions.value
-      const results = await Promise.allSettled(
-        regions.map((r) => fetchRegion(r)),
-      )
-
-      const merged: PlayerWithRegion[] = []
-      for (const result of results) {
-        if (result.status === 'fulfilled') {
-          merged.push(...result.value)
-        }
-      }
+      const all = await fetchMulti(currentRegions.value)
 
       const seen = new Set<string>()
-      const unique = merged.filter((p) => {
+      const unique = all.filter((p) => {
         if (seen.has(p.puuid)) return false
         seen.add(p.puuid)
         return true
@@ -447,13 +448,6 @@ async function loadPlayers(): Promise<void> {
 
       unique.sort((a, b) => b.lp - a.lp)
       players.value = unique.slice(0, 30)
-
-      if (merged.length === 0) {
-        const firstFailed = results.find((r) => r.status === 'rejected')
-        if (firstFailed && firstFailed.status === 'rejected') {
-          throw firstFailed.reason
-        }
-      }
     } else {
       players.value = await fetchRegion(selectedRegion.value)
     }
@@ -475,11 +469,11 @@ async function loadPlayers(): Promise<void> {
   }
 }
 
-function openPlayerBuilds(player: PlayerWithRegion): void {
+function openPlayerBuilds(player: ChampionPlayer): void {
   router.push({
     path: `/champion/${championId}/player/${player.puuid}`,
     query: {
-      region: player.playerRegion,
+      region: player.region ?? '',
       name: player.gameName,
     },
   })
