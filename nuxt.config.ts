@@ -36,8 +36,12 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // All Riot API calls go through the external lol-tricks-api backend.
-      // Local dev default: http://localhost:3000
-      apiBase: process.env['NUXT_PUBLIC_API_BASE'] ?? 'http://localhost:3000',
+      // Default points at the deployed backend so Vercel builds work out
+      // of the box. Override via NUXT_PUBLIC_API_BASE for local dev
+      // (e.g. http://localhost:3001).
+      apiBase:
+        process.env['NUXT_PUBLIC_API_BASE'] ??
+        'https://lol-tricks-api.vercel.app',
     },
   },
 

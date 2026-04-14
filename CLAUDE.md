@@ -39,7 +39,7 @@ pages/champion/[id].vue → imports src/pages/champion/ui/ChampionPage.vue
 
 ### External API backend
 
-All Riot Games API calls go through the external **lol-tricks-api** backend — this app never holds `RIOT_API_KEY`. The URL of the backend is read from `runtimeConfig.public.apiBase` (env `NUXT_PUBLIC_API_BASE`, default `http://localhost:3000` for dev). Use the `buildApiUrl('/api/riot/...')` helper from `src/shared/api` to compose full URLs inside `$fetch`/`useFetch` calls.
+All Riot Games API calls go through the external **lol-tricks-api** backend — this app never holds `RIOT_API_KEY`. The URL of the backend is read from `runtimeConfig.public.apiBase` (env `NUXT_PUBLIC_API_BASE`, default `http://localhost:3001` for dev — Nuxt dev itself runs on `3000`, so the backend must listen on a different port; `lol-tricks-api/.env` uses `PORT=3001`). Use the `buildApiUrl('/api/riot/...')` helper from `src/shared/api` to compose full URLs inside `$fetch`/`useFetch` calls.
 
 ## Code Style
 
@@ -51,4 +51,4 @@ All Riot Games API calls go through the external **lol-tricks-api** backend — 
 
 ## Deployment
 
-Vercel with `nitro: { preset: 'vercel' }`. Requires `NUXT_PUBLIC_API_BASE` pointing at the deployed lol-tricks-api (e.g. `https://lol-tricks-api.vercel.app`).
+Vercel with `nitro: { preset: 'vercel' }`. `NUXT_PUBLIC_API_BASE` defaults to `https://lol-tricks-api.vercel.app` so prod builds work without extra env vars; override it on Vercel only if the backend moves to a different URL.
