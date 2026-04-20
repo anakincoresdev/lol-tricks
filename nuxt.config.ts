@@ -1,12 +1,11 @@
 export default defineNuxtConfig({
-  compatibilityDate: '2025-04-12',
+  compatibilityDate: '2025-11-01',
   devtools: { enabled: true },
 
   modules: ['@nuxt/eslint'],
 
   typescript: {
     strict: true,
-    typeCheck: true,
   },
 
   app: {

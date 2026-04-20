@@ -15,35 +15,32 @@
     <section class="home-page__hero">
       <div class="home-page__hero-content">
         <span class="home-page__live mono">
-          ⚡ LIVE · 18,422 МАТЧЕЙ СЕГОДНЯ
+          RIOT API · ПАТЧ {{ patchShort }}
         </span>
 
         <h1 class="home-page__title display">
-          <span class="home-page__title-line">Узнай, что</span>
+          <span class="home-page__title-line">Билды</span>
           <span class="home-page__title-line">
-            собирают
-            <span class="glitch" data-text="лучшие">лучшие</span>
+            <span class="glitch" data-text="OTP-мейнов">OTP-мейнов</span>
           </span>
           <span class="home-page__title-line home-page__title-line--accent">
-            OTP игроки.
+            по чемпионам.
           </span>
         </h1>
 
         <p class="home-page__subcopy">
-          Ищи чемпиона — получи топ-100 преданных мейнов со всех серверов,
-          отсортированных по мастерству, играм и винрейту.
+          Топ-100 игроков на каждого чемпиона со всех серверов — сортировка по
+          мастерству, играм и винрейту.
         </p>
 
         <div class="home-page__search">
           <SearchAutocomplete />
         </div>
 
-        <p class="home-page__hint mono">
-          ↳ ВВОДИ ИМЯ НА РУССКОМ ИЛИ АНГЛИЙСКОМ
-        </p>
+        <p class="home-page__hint mono">// ПОИСК НА РУССКОМ ИЛИ АНГЛИЙСКОМ</p>
 
         <div class="home-page__popular">
-          <span class="home-page__popular-label mono">↳ ПОПУЛЯРНЫЕ СЕЙЧАС</span>
+          <span class="home-page__popular-label mono">// ЧАСТО СМОТРЯТ</span>
           <div class="home-page__popular-list">
             <NuxtLink
               v-for="(champ, i) in popularChampions"
@@ -61,9 +58,6 @@
               <span class="display home-page__popular-name">
                 {{ champ.name }}
               </span>
-              <span class="mono home-page__popular-pct">
-                +{{ trendPct(i) }}%
-              </span>
             </NuxtLink>
           </div>
         </div>
@@ -76,64 +70,63 @@
 
     <section class="home-page__stats">
       <div class="home-page__stat stick home-page__stat--tilt-1">
-        <span class="mono home-page__stat-kicker">ПРОИНДЕКСИРОВАНО</span>
+        <span class="mono home-page__stat-kicker">ИГРОКОВ В БАЗЕ</span>
         <span class="big-num home-page__stat-num home-page__stat-num--acid">
           1.2M
         </span>
-        <span class="home-page__stat-label">отслеживаемых игроков</span>
+        <span class="home-page__stat-label">со всех серверов</span>
       </div>
       <div class="home-page__stat stick home-page__stat--tilt-2">
-        <span class="mono home-page__stat-kicker">РЕГИОНОВ</span>
+        <span class="mono home-page__stat-kicker">СЕРВЕРОВ</span>
         <span class="big-num home-page__stat-num home-page__stat-num--cyan">
           12
         </span>
-        <span class="home-page__stat-label">кластеров серверов</span>
+        <span class="home-page__stat-label">от NA до KR</span>
       </div>
       <div class="home-page__stat stick home-page__stat--tilt-3">
         <span class="mono home-page__stat-kicker">ЧЕМПИОНОВ</span>
         <span class="big-num home-page__stat-num home-page__stat-num--mag">
           168
         </span>
-        <span class="home-page__stat-label">полностью проанализированы</span>
+        <span class="home-page__stat-label">в индексе</span>
       </div>
       <div class="home-page__stat stick home-page__stat--tilt-1">
         <span class="mono home-page__stat-kicker">АПДЕЙТ</span>
         <span class="big-num home-page__stat-num home-page__stat-num--acid">
           3м
         </span>
-        <span class="home-page__stat-label">интервал обновления</span>
+        <span class="home-page__stat-label">между обновлениями</span>
       </div>
     </section>
 
     <section class="home-page__how">
       <h2 class="home-page__how-title display">
-        Как работает индекс
+        Как устроен индекс
         <span class="home-page__how-dot">.</span>
       </h2>
       <div class="home-page__how-cards">
         <div class="home-page__how-card stick">
-          <span class="mono home-page__how-step">ШАГ 01</span>
-          <span class="display home-page__how-card-title">Выбери чемпиона</span>
+          <span class="mono home-page__how-step">01 · ПОИСК</span>
+          <span class="display home-page__how-card-title">По чемпиону</span>
           <p class="home-page__how-card-body">
-            Введи имя или кликни. Мы покажем каждого ранкед-игрока, который
-            играет на нём как на основном.
+            В список попадают ранкед-игроки, у которых чемпион — в основном
+            пуле.
           </p>
         </div>
         <div class="home-page__how-card stick">
-          <span class="mono home-page__how-step">ШАГ 02</span>
-          <span class="display home-page__how-card-title">
-            Ранжируем по регионам
-          </span>
+          <span class="mono home-page__how-step">02 · РАНЖИРОВАНИЕ</span>
+          <span class="display home-page__how-card-title">Глобальный топ</span>
           <p class="home-page__how-card-body">
-            Топ-100 считается глобально — мастерство, недавние игры и вес LP.
+            Топ-100 считается по мастерству, недавним играм и весу LP — без
+            фильтра по региону.
           </p>
         </div>
         <div class="home-page__how-card stick">
-          <span class="mono home-page__how-step">ШАГ 03</span>
-          <span class="display home-page__how-card-title">Изучи билды</span>
+          <span class="mono home-page__how-step">03 · ДЕТАЛИ</span>
+          <span class="display home-page__how-card-title">По игроку</span>
           <p class="home-page__how-card-body">
-            Погружайся в любого: порядок предметов, руны, матчапы, стрики и
-            винрейты.
+            Клик по строке открывает порядок предметов, руны, винрейты в
+            матчапах и стрики.
           </p>
         </div>
       </div>
@@ -142,7 +135,11 @@
 </template>
 
 <script setup lang="ts">
-import { APP_NAME, getChampionImageUrl } from '~/src/shared/config'
+import {
+  APP_NAME,
+  DDRAGON_VERSION,
+  getChampionImageUrl,
+} from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
 import { SearchAutocomplete } from '~/src/widgets/search-autocomplete'
 
@@ -162,21 +159,17 @@ const popularIds = [
 ]
 const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
 
-const trendPcts = [12.4, 8.3, 6.1, 4.7, 3.9, 2.8, 1.6, 0.9]
-function trendPct(i: number): string {
-  return (trendPcts[i] ?? 0.5).toFixed(1)
-}
+const patchShort = DDRAGON_VERSION.split('.').slice(0, 2).join('.')
 
 const marqueeItems = [
-  'Jinx +12.4%',
-  'Yasuo META',
-  'Ahri нерф близко',
-  'Vayne изумрудный пик',
-  'Thresh суп 1-трик',
-  'KR челленджер +34%',
-  'Патч 26.08 данные live',
-  'Lee Sin джангл клир',
-  'Lulu суп +8%',
+  'патч 26.08',
+  '168 чемпионов',
+  '12 серверов',
+  'NA · EUW · EUNE · KR',
+  'BR · JP · LAN · LAS',
+  'OCE · TR · RU · VN',
+  'обновление каждые 3 минуты',
+  'данные из riot api',
 ]
 const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
 </script>
@@ -295,7 +288,7 @@ const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
   gap: 0;
   font-family: 'Oswald', 'Space Grotesk', sans-serif;
   font-weight: 700;
-  font-size: clamp(60px, 8vw, 128px);
+  font-size: clamp(44px, 5.6vw, 88px);
   line-height: 0.95;
   letter-spacing: -0.005em;
   text-transform: uppercase;
@@ -399,11 +392,6 @@ const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
 .home-page__popular-name {
   font-size: 14px;
   font-weight: 600;
-}
-
-.home-page__popular-pct {
-  font-size: 10px;
-  color: var(--fg-dim);
 }
 
 .home-page__marquee {
