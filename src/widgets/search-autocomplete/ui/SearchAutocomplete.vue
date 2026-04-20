@@ -1,24 +1,13 @@
 <template>
   <div ref="wrapperRef" class="search-ac">
-    <div class="search-ac__input-wrapper">
-      <svg
-        class="search-ac__icon"
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.35-4.35" />
-      </svg>
+    <div class="search-ac__bar">
+      <span class="search-ac__label mono">ЧЕМПИОН</span>
       <input
         ref="inputRef"
         v-model="query"
         type="text"
         class="search-ac__input"
-        placeholder="Поиск чемпиона... например Ари, Yasuo, Зед"
+        placeholder="Джинкс, Ясуо, Ahri…"
         autocomplete="off"
         @focus="onFocus"
         @keydown.down.prevent="moveDown"
@@ -26,16 +15,17 @@
         @keydown.enter.prevent="selectCurrent"
         @keydown.escape="close"
       />
-      <button
-        v-if="query.length > 0"
-        class="search-ac__clear"
-        @click="clearQuery"
-      >
-        &times;
+      <button class="search-ac__submit mono" @click="selectCurrent">
+        ПОИСК
+        <span class="search-ac__submit-arrow">→</span>
       </button>
     </div>
 
     <div v-if="showDropdown && filtered.length > 0" class="search-ac__dropdown">
+      <div class="search-ac__dropdown-head mono">
+        <span>РЕЗУЛЬТАТЫ · {{ filtered.length }}</span>
+        <span>↵ ENTER для перехода</span>
+      </div>
       <button
         v-for="(champ, i) in filtered"
         :key="champ.id"
@@ -51,12 +41,12 @@
           loading="lazy"
         />
         <div class="search-ac__item-info">
-          <span class="search-ac__item-name">{{ champ.name }}</span>
-          <span class="search-ac__item-id">{{ champ.id }}</span>
+          <span class="search-ac__item-name display">{{ champ.name }}</span>
+          <span class="search-ac__item-id mono">
+            {{ champ.roles.join(' · ').toUpperCase() }}
+          </span>
         </div>
-        <span class="search-ac__item-roles">
-          {{ champ.roles.join(', ') }}
-        </span>
+        <span class="search-ac__item-roles mono">{{ champ.id }}</span>
       </button>
     </div>
 
@@ -85,7 +75,9 @@ const inputRef = ref<HTMLInputElement | null>(null)
 
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
-  if (q.length < 1) return []
+  if (q.length < 1) {
+    return []
+  }
 
   return CHAMPIONS.filter((c) => {
     return (
@@ -109,12 +101,6 @@ function onFocus(): void {
 
 function close(): void {
   showDropdown.value = false
-}
-
-function clearQuery(): void {
-  query.value = ''
-  showDropdown.value = false
-  inputRef.value?.focus()
 }
 
 function moveDown(): void {
@@ -164,34 +150,30 @@ onBeforeUnmount(() => {
   max-width: 720px;
 }
 
-.search-ac__input-wrapper {
-  position: relative;
+.search-ac__bar {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   background: var(--surface);
   border: 2px solid var(--border);
   border-radius: 6px;
-  padding: 10px 10px 10px 56px;
-  transition: border-color 0.15s;
+  padding: 6px;
 }
 
-.search-ac__input-wrapper:focus-within {
-  border-color: var(--acid);
-}
-
-.search-ac__icon {
-  position: absolute;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
+.search-ac__label {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 12px;
   color: var(--fg-dim);
-  pointer-events: none;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-right: 1px solid var(--border);
 }
 
 .search-ac__input {
   flex: 1;
   min-width: 0;
-  padding: 10px 8px;
+  padding: 16px 14px;
   background: transparent;
   border: none;
   color: var(--fg);
@@ -206,19 +188,29 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 
-.search-ac__clear {
-  background: none;
-  border: none;
-  color: var(--fg-dim);
-  font-size: 1.4rem;
+.search-ac__submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+  background: var(--acid);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-radius: 4px;
   cursor: pointer;
-  padding: 4px 10px;
-  line-height: 1;
-  transition: color 0.15s;
+  transition: opacity 0.15s;
 }
 
-.search-ac__clear:hover {
-  color: var(--fg);
+.search-ac__submit:hover {
+  opacity: 0.85;
+}
+
+.search-ac__submit-arrow {
+  font-size: 16px;
+  line-height: 1;
 }
 
 .search-ac__dropdown {
@@ -232,6 +224,17 @@ onBeforeUnmount(() => {
   overflow: hidden;
   z-index: 50;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.search-ac__dropdown-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  font-size: 10px;
+  color: var(--fg-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
 }
 
 .search-ac__dropdown--empty {
@@ -280,30 +283,42 @@ onBeforeUnmount(() => {
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  gap: 2px;
 }
 
 .search-ac__item-name {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 600;
   font-size: 16px;
+  font-weight: 600;
   color: var(--fg);
   letter-spacing: -0.01em;
 }
 
 .search-ac__item-id {
-  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--fg-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
 .search-ac__item-roles {
-  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--fg-dim);
-  text-transform: uppercase;
   letter-spacing: 0.08em;
   white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .search-ac__label {
+    display: none;
+  }
+
+  .search-ac__input {
+    padding: 12px 14px;
+    font-size: 16px;
+  }
+
+  .search-ac__submit {
+    padding: 12px 16px;
+    font-size: 11px;
+  }
 }
 </style>

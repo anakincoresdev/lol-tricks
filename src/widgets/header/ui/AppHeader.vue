@@ -10,25 +10,33 @@
           <span class="app-header__logo-dot">·</span>
           <span>tricks</span>
         </span>
+        <span class="app-header__kicker mono">// ONE-TRICK INDEX v2.4</span>
       </NuxtLink>
-      <span class="app-header__kicker mono">// ONE-TRICK INDEX v2.4</span>
+
       <nav class="app-header__nav">
-        <NuxtLink
-          v-for="link in navLinks"
-          :key="link.to"
-          :to="link.to"
-          class="app-header__link mono"
+        <NuxtLink to="/" class="app-header__link mono">Поиск</NuxtLink>
+        <a href="#" class="app-header__link mono app-header__link--ghost">
+          Топы
+        </a>
+        <a
+          href="#"
+          class="app-header__link mono app-header__link--ghost app-header__link--hide-mobile"
         >
-          {{ link.label }}
-        </NuxtLink>
+          Билды
+        </a>
+        <a
+          href="#"
+          class="app-header__link mono app-header__link--ghost app-header__link--hide-mobile"
+        >
+          Мета
+        </a>
+        <button class="app-header__signin mono">ВОЙТИ</button>
       </nav>
     </div>
   </header>
 </template>
 
-<script setup lang="ts">
-const navLinks = [{ to: '/', label: 'SEARCH' }]
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .app-header {
@@ -46,13 +54,14 @@ const navLinks = [{ to: '/', label: 'SEARCH' }]
   padding: 14px 24px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .app-header__logo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   text-decoration: none;
 }
 
@@ -96,7 +105,6 @@ const navLinks = [{ to: '/', label: 'SEARCH' }]
   display: flex;
   gap: 4px;
   align-items: center;
-  margin-left: auto;
 }
 
 .app-header__link {
@@ -105,10 +113,18 @@ const navLinks = [{ to: '/', label: 'SEARCH' }]
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--fg-dim);
+  color: var(--fg);
   border-bottom: 2px solid transparent;
   text-decoration: none;
   transition: color 0.15s;
+}
+
+.app-header__link--ghost {
+  color: var(--fg-dim);
+}
+
+.app-header__link--ghost:hover {
+  color: var(--fg);
 }
 
 .app-header__link:hover {
@@ -120,9 +136,36 @@ const navLinks = [{ to: '/', label: 'SEARCH' }]
   border-bottom-color: var(--acid);
 }
 
-@media (max-width: 760px) {
+.app-header__signin {
+  margin-left: 8px;
+  padding: 8px 14px;
+  background: var(--acid);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  transition: opacity 0.15s;
+}
+
+.app-header__signin:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 900px) {
   .app-header__kicker {
     display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header__link--hide-mobile {
+    display: none;
+  }
+
+  .app-header__container {
+    padding: 12px 16px;
   }
 }
 </style>

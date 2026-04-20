@@ -4,11 +4,13 @@
     <main class="app-layout__main">
       <slot />
     </main>
+    <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { AppHeader } from '~/src/widgets/header'
+import { AppFooter } from '~/src/widgets/footer'
 </script>
 
 <style scoped>

@@ -1,43 +1,132 @@
 <template>
   <div class="home-page dotted-bg">
+    <div class="home-page__bg" aria-hidden="true">
+      <div class="home-page__bg-art" />
+      <div class="home-page__bg-tint" />
+      <div class="home-page__bg-dots" />
+      <div class="home-page__bg-fade" />
+    </div>
+
     <section class="home-page__hero">
-      <div class="home-page__hero-bg" />
       <div class="home-page__hero-content">
         <span class="home-page__live mono">
-          ⚡ LIVE · 18,422 MATCHES INDEXED TODAY
+          ⚡ LIVE · 18,422 МАТЧЕЙ СЕГОДНЯ
         </span>
+
         <h1 class="home-page__title display">
-          {{ APP_NAME }}
-          <span class="home-page__title-dot">.</span>
+          <span class="home-page__title-line">Узнай, что</span>
+          <span class="home-page__title-line">собирают лучшие</span>
+          <span class="home-page__title-line home-page__title-line--accent">
+            OTP игроки.
+          </span>
         </h1>
-        <p class="home-page__subtitle">
-          Узнай, что собирают лучшие OTP игроки на твоём чемпионе
+
+        <p class="home-page__subcopy">
+          Ищи чемпиона — получи топ-100 преданных мейнов со всех серверов,
+          отсортированных по мастерству, играм и винрейту.
         </p>
+
         <div class="home-page__search">
           <SearchAutocomplete />
         </div>
+
         <p class="home-page__hint mono">
-          ↳ Начни вводить имя чемпиона на русском или английском
+          ↳ ВВОДИ ИМЯ НА РУССКОМ ИЛИ АНГЛИЙСКОМ
         </p>
+
         <div class="home-page__popular">
-          <span class="home-page__popular-label mono">Популярные:</span>
-          <NuxtLink
-            v-for="(champ, i) in popularChampions"
-            :key="champ.id"
-            :to="`/champion/${champ.id}`"
-            class="home-page__popular-tag stick"
-            :class="`home-page__popular-tag--tilt-${(i % 3) + 1}`"
-          >
-            <img
-              :src="getChampionImageUrl(champ.id)"
-              :alt="champ.name"
-              class="home-page__popular-icon"
-              loading="lazy"
-            />
-            <span class="display home-page__popular-name">
-              {{ champ.name }}
-            </span>
-          </NuxtLink>
+          <span class="home-page__popular-label mono">↳ ПОПУЛЯРНЫЕ СЕЙЧАС</span>
+          <div class="home-page__popular-list">
+            <NuxtLink
+              v-for="(champ, i) in popularChampions"
+              :key="champ.id"
+              :to="`/champion/${champ.id}`"
+              class="home-page__popular-tag stick"
+              :class="`home-page__popular-tag--tilt-${(i % 3) + 1}`"
+            >
+              <img
+                :src="getChampionImageUrl(champ.id)"
+                :alt="champ.name"
+                class="home-page__popular-icon"
+                loading="lazy"
+              />
+              <span class="display home-page__popular-name">
+                {{ champ.name }}
+              </span>
+              <span class="mono home-page__popular-pct">
+                +{{ trendPct(i) }}%
+              </span>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="home-page__marquee mono">
+      <span class="home-page__marquee-track">{{ marqueeText }}</span>
+    </div>
+
+    <section class="home-page__stats">
+      <div class="home-page__stat stick home-page__stat--tilt-1">
+        <span class="mono home-page__stat-kicker">ПРОИНДЕКСИРОВАНО</span>
+        <span class="big-num home-page__stat-num home-page__stat-num--acid">
+          1.2M
+        </span>
+        <span class="home-page__stat-label">отслеживаемых игроков</span>
+      </div>
+      <div class="home-page__stat stick home-page__stat--tilt-2">
+        <span class="mono home-page__stat-kicker">РЕГИОНОВ</span>
+        <span class="big-num home-page__stat-num home-page__stat-num--cyan">
+          12
+        </span>
+        <span class="home-page__stat-label">кластеров серверов</span>
+      </div>
+      <div class="home-page__stat stick home-page__stat--tilt-3">
+        <span class="mono home-page__stat-kicker">ЧЕМПИОНОВ</span>
+        <span class="big-num home-page__stat-num home-page__stat-num--mag">
+          168
+        </span>
+        <span class="home-page__stat-label">полностью проанализированы</span>
+      </div>
+      <div class="home-page__stat stick home-page__stat--tilt-1">
+        <span class="mono home-page__stat-kicker">АПДЕЙТ</span>
+        <span class="big-num home-page__stat-num home-page__stat-num--acid">
+          3м
+        </span>
+        <span class="home-page__stat-label">интервал обновления</span>
+      </div>
+    </section>
+
+    <section class="home-page__how">
+      <h2 class="home-page__how-title display">
+        Как работает индекс
+        <span class="home-page__how-dot">.</span>
+      </h2>
+      <div class="home-page__how-cards">
+        <div class="home-page__how-card stick">
+          <span class="mono home-page__how-step">ШАГ 01</span>
+          <span class="display home-page__how-card-title">Выбери чемпиона</span>
+          <p class="home-page__how-card-body">
+            Введи имя или кликни. Мы покажем каждого ранкед-игрока, который
+            играет на нём как на основном.
+          </p>
+        </div>
+        <div class="home-page__how-card stick">
+          <span class="mono home-page__how-step">ШАГ 02</span>
+          <span class="display home-page__how-card-title">
+            Ранжируем по регионам
+          </span>
+          <p class="home-page__how-card-body">
+            Топ-100 считается глобально — мастерство, недавние игры и вес LP.
+          </p>
+        </div>
+        <div class="home-page__how-card stick">
+          <span class="mono home-page__how-step">ШАГ 03</span>
+          <span class="display home-page__how-card-title">Изучи билды</span>
+          <p class="home-page__how-card-body">
+            Погружайся в любого: порядок предметов, руны, матчапы, стрики и
+            винрейты.
+          </p>
         </div>
       </div>
     </section>
@@ -64,35 +153,85 @@ const popularIds = [
   'Riven',
 ]
 const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
+
+const trendPcts = [12.4, 8.3, 6.1, 4.7, 3.9, 2.8, 1.6, 0.9]
+function trendPct(i: number): string {
+  return (trendPcts[i] ?? 0.5).toFixed(1)
+}
+
+const marqueeItems = [
+  'Jinx +12.4%',
+  'Yasuo META',
+  'Ahri нерф близко',
+  'Vayne изумрудный пик',
+  'Thresh суп 1-трик',
+  'KR челленджер +34%',
+  'Патч 26.08 данные live',
+  'Lee Sin джангл клир',
+  'Lulu суп +8%',
+]
+const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
 </script>
 
 <style scoped>
 .home-page {
-  min-height: calc(100vh - 64px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   position: relative;
   overflow: hidden;
 }
 
-.home-page__hero {
-  position: relative;
-  padding: 72px 24px 56px;
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.home-page__hero-bg {
+.home-page__bg {
   position: absolute;
   top: 0;
-  right: -10%;
-  width: 70%;
-  height: 100%;
+  right: 0;
+  width: 62%;
+  height: 860px;
+  max-height: 100%;
   pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.home-page__bg-art {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse at 72% 42%,
+      rgba(255, 46, 166, 0.55) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse at 95% 70%,
+      rgba(34, 231, 255, 0.4) 0%,
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse at 55% 15%,
+      rgba(124, 58, 237, 0.35) 0%,
+      transparent 45%
+    ),
+    linear-gradient(135deg, #1a1d27 0%, #0a0b0f 70%);
+  mix-blend-mode: screen;
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.6) 25%,
+    #000 55%,
+    #000 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.6) 25%,
+    #000 55%,
+    #000 100%
+  );
+  filter: saturate(1.1) contrast(1.05);
+}
+
+.home-page__bg-tint {
+  position: absolute;
+  inset: 0;
   background:
     radial-gradient(
       ellipse at 75% 40%,
@@ -105,21 +244,42 @@ const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
       transparent 50%
     );
   mix-blend-mode: screen;
-  mask-image: linear-gradient(90deg, transparent 0%, #000 35%, #000 100%);
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    #000 35%,
-    #000 100%
+}
+
+.home-page__bg-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    circle,
+    rgba(198, 255, 61, 0.14) 1px,
+    transparent 1px
+  );
+  background-size: 14px 14px;
+  mix-blend-mode: overlay;
+}
+
+.home-page__bg-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 11, 15, 0.4) 0%,
+    transparent 15%,
+    transparent 70%,
+    rgba(10, 11, 15, 1) 100%
   );
 }
 
-.home-page__hero-content {
+.home-page__hero {
   position: relative;
-  text-align: left;
-  max-width: 720px;
-  width: 100%;
+  padding: 72px 24px 56px;
+  max-width: 1400px;
+  margin: 0 auto;
   z-index: 1;
+}
+
+.home-page__hero-content {
+  max-width: 720px;
 }
 
 .home-page__live {
@@ -136,6 +296,8 @@ const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
 }
 
 .home-page__title {
+  display: flex;
+  flex-direction: column;
   font-size: clamp(48px, 6.5vw, 96px);
   line-height: 0.88;
   letter-spacing: -0.05em;
@@ -143,11 +305,11 @@ const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
   margin-bottom: 24px;
 }
 
-.home-page__title-dot {
-  color: var(--mag);
+.home-page__title-line--accent {
+  color: var(--acid);
 }
 
-.home-page__subtitle {
+.home-page__subcopy {
   font-size: 18px;
   color: var(--fg-dim);
   max-width: 560px;
@@ -156,22 +318,20 @@ const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
 }
 
 .home-page__search {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .home-page__hint {
   font-size: 11px;
   color: var(--fg-dim);
   letter-spacing: 0.15em;
-  text-transform: uppercase;
-  margin-bottom: 36px;
+  margin-bottom: 28px;
 }
 
 .home-page__popular {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .home-page__popular-label {
@@ -179,7 +339,12 @@ const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
   color: var(--fg-dim);
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  margin-right: 4px;
+}
+
+.home-page__popular-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .home-page__popular-tag {
@@ -196,7 +361,6 @@ const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
 }
 
 .home-page__popular-tag:hover {
-  transform: scale(1.05);
   border-color: var(--acid);
 }
 
@@ -231,13 +395,162 @@ const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
   font-weight: 600;
 }
 
+.home-page__popular-pct {
+  font-size: 10px;
+  color: var(--fg-dim);
+}
+
+.home-page__marquee {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.home-page__marquee-track {
+  display: inline-block;
+  animation: marquee 40s linear infinite;
+  padding-left: 100%;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.home-page__stats {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 40px auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.home-page__stat {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 6px;
+}
+
+.home-page__stat--tilt-1 {
+  transform: rotate(-2deg);
+}
+.home-page__stat--tilt-2 {
+  transform: rotate(1.5deg);
+}
+.home-page__stat--tilt-3 {
+  transform: rotate(-0.8deg);
+}
+
+.home-page__stat-kicker {
+  font-size: 10px;
+  color: var(--fg-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.home-page__stat-num {
+  font-size: 56px;
+}
+
+.home-page__stat-num--acid {
+  color: var(--acid);
+}
+.home-page__stat-num--cyan {
+  color: var(--cyan);
+}
+.home-page__stat-num--mag {
+  color: var(--mag);
+}
+
+.home-page__stat-label {
+  font-size: 13px;
+  color: var(--fg-dim);
+}
+
+.home-page__how {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 80px auto;
+  padding: 0 24px;
+}
+
+.home-page__how-title {
+  font-size: 48px;
+  letter-spacing: -0.04em;
+  margin-bottom: 40px;
+  color: var(--fg);
+}
+
+.home-page__how-dot {
+  color: var(--mag);
+}
+
+.home-page__how-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.home-page__how-card {
+  padding: 24px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home-page__how-step {
+  font-size: 11px;
+  color: var(--fg-dim);
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+
+.home-page__how-card-title {
+  font-size: 24px;
+  color: var(--fg);
+}
+
+.home-page__how-card-body {
+  color: var(--fg-dim);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 @media (max-width: 640px) {
   .home-page__title {
     font-size: clamp(40px, 10vw, 72px);
   }
 
-  .home-page__subtitle {
+  .home-page__subcopy {
     font-size: 16px;
+  }
+
+  .home-page__stat-num {
+    font-size: 44px;
+  }
+
+  .home-page__how-title {
+    font-size: 32px;
   }
 }
 </style>

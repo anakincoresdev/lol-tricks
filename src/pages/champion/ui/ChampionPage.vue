@@ -10,8 +10,20 @@
           class="champ-page__icon"
         />
         <div class="champ-page__info">
-          <h1 class="champ-page__name">One Trick Ranking</h1>
-          <p class="champ-page__title">{{ champion.name }}</p>
+          <span class="champ-page__kicker mono">
+            ONE-TRICK INDEX · {{ champion.roles[0]?.toUpperCase() }}
+          </span>
+          <h1 class="champ-page__title display">{{ champion.name }}</h1>
+          <div class="champ-page__chips">
+            <span class="chip chip--acid">ТОП-100 · ГЛОБАЛЬНО</span>
+            <span v-if="heroStats" class="chip">
+              СРЕД. WR {{ heroStats.avgWr }}%
+            </span>
+            <span v-if="heroStats" class="chip">
+              СРЕД. ИГР {{ heroStats.avgGames }}
+            </span>
+            <span class="chip">АПДЕЙТ ~3М НАЗАД</span>
+          </div>
         </div>
       </div>
 
@@ -90,6 +102,18 @@
         class="champ-page__results"
       >
         <div class="champ-page__table-wrapper">
+          <div class="champ-page__table-head">
+            <div class="champ-page__table-title display">
+              Leaderboard
+              <span class="champ-page__table-count mono">
+                / {{ filteredSortedPlayers.length }} из {{ players.length }}
+              </span>
+            </div>
+            <div class="champ-page__table-actions">
+              <button class="champ-page__table-btn mono">EXPORT CSV</button>
+              <button class="champ-page__table-btn mono">⚡ LIVE</button>
+            </div>
+          </div>
           <table class="champ-page__table">
             <thead>
               <tr>
@@ -401,6 +425,19 @@ async function fetchMulti(regions: RegionCode[]): Promise<ChampionPlayer[]> {
   return response.allPlayers
 }
 
+const heroStats = computed<{ avgWr: number; avgGames: number } | null>(() => {
+  if (!players.value || players.value.length === 0) {
+    return null
+  }
+  const total = players.value.length
+  const wrSum = players.value.reduce((s, p) => s + p.winRate, 0)
+  const gamesSum = players.value.reduce((s, p) => s + p.wins + p.losses, 0)
+  return {
+    avgWr: Math.round(wrSum / total),
+    avgGames: Math.round(gamesSum / total),
+  }
+})
+
 const filteredSortedPlayers = computed<ChampionPlayer[]>(() => {
   if (!players.value) return []
   const filtered =
@@ -540,8 +577,7 @@ onMounted(() => {
   gap: 8px;
 }
 
-.champ-page__name {
-  font-family: 'JetBrains Mono', monospace;
+.champ-page__kicker {
   font-size: 11px;
   color: var(--fg-dim);
   font-weight: 600;
@@ -550,12 +586,18 @@ onMounted(() => {
 }
 
 .champ-page__title {
-  font-family: 'Space Grotesk', sans-serif;
   font-size: 72px;
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 0.9;
   color: var(--fg);
+}
+
+.champ-page__chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
 }
 
 /* Filters */
@@ -711,6 +753,56 @@ onMounted(() => {
   border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--surface);
+}
+
+.champ-page__table-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.champ-page__table-title {
+  font-size: 20px;
+  color: var(--fg);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.champ-page__table-count {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-dim);
+}
+
+.champ-page__table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.champ-page__table-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg-dim);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.champ-page__table-btn:hover {
+  color: var(--fg);
+  border-color: var(--fg-dim);
 }
 
 .champ-page__table {
