@@ -131,33 +131,11 @@ select {
 }
 
 .glitch {
-  position: relative;
   display: inline-block;
-}
-
-.glitch::before,
-.glitch::after {
-  content: attr(data-text);
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.glitch::before {
-  color: var(--mag);
-  transform: translate(-3px, 0);
-  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
-  mix-blend-mode: screen;
-}
-
-.glitch::after {
-  color: var(--cyan);
-  transform: translate(3px, 0);
-  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
-  mix-blend-mode: screen;
+  text-shadow:
+    -4px 0 0 var(--mag),
+    4px 0 0 var(--cyan),
+    6px 6px 0 rgba(10, 11, 15, 0.85);
 }
 
 ::-webkit-scrollbar {

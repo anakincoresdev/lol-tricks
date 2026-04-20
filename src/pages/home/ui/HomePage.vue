@@ -292,12 +292,12 @@ const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
 .home-page__title {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-family: 'Archivo Black', 'Space Grotesk', sans-serif;
-  font-weight: 400;
-  font-size: clamp(48px, 6.4vw, 100px);
-  line-height: 0.92;
-  letter-spacing: -0.03em;
+  gap: 0;
+  font-family: 'Oswald', 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: clamp(60px, 8vw, 128px);
+  line-height: 0.95;
+  letter-spacing: -0.005em;
   text-transform: uppercase;
   color: var(--fg);
   margin-bottom: 28px;
