@@ -2,7 +2,7 @@
   <div class="home-page dotted-bg">
     <div class="home-page__bg" aria-hidden="true">
       <img
-        :src="getChampionSplashUrl('Jinx')"
+        src="https://static0.gamerantimages.com/wordpress/wp-content/uploads/2024/11/league-of-legends-arcane-mini-game-future-shows.jpg?q=70&fit=crop&w=1600&h=1100&dpr=1"
         alt=""
         class="home-page__bg-img"
         referrerpolicy="no-referrer"
@@ -139,11 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  APP_NAME,
-  getChampionImageUrl,
-  getChampionSplashUrl,
-} from '~/src/shared/config'
+import { APP_NAME, getChampionImageUrl } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
 import { SearchAutocomplete } from '~/src/widgets/search-autocomplete'
 
@@ -293,15 +289,16 @@ const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
 .home-page__title {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-family: 'Unbounded', 'Space Grotesk', sans-serif;
-  font-weight: 800;
-  font-size: clamp(44px, 5.6vw, 84px);
-  line-height: 0.95;
-  letter-spacing: -0.04em;
+  gap: 2px;
+  font-family: 'Chakra Petch', 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: clamp(52px, 7vw, 108px);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
   color: var(--fg);
   margin-bottom: 28px;
-  text-shadow: 0 2px 24px rgba(10, 11, 15, 0.7);
+  text-shadow: 0 2px 24px rgba(10, 11, 15, 0.8);
 }
 
 .home-page__title-line {
@@ -311,8 +308,8 @@ const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
 .home-page__title-line--accent {
   color: var(--acid);
   text-shadow:
-    0 2px 24px rgba(10, 11, 15, 0.7),
-    0 0 40px rgba(198, 255, 61, 0.25);
+    0 2px 24px rgba(10, 11, 15, 0.8),
+    0 0 40px rgba(198, 255, 61, 0.35);
 }
 
 .home-page__subcopy {
