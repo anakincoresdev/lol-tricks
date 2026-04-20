@@ -14,9 +14,7 @@
 
     <section class="home-page__hero">
       <div class="home-page__hero-content">
-        <span class="home-page__live mono">
-          RIOT API · ПАТЧ {{ patchShort }}
-        </span>
+        <span class="home-page__live mono">ПАТЧ {{ patchShort }}</span>
 
         <h1 class="home-page__title display">
           <span class="home-page__title-line">Билды</span>
@@ -159,7 +157,22 @@ const popularIds = [
 ]
 const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
 
-const patchShort = DDRAGON_VERSION.split('.').slice(0, 2).join('.')
+// DDragon exposes the full list of LoL client versions (newest first).
+// Fetch it during SSR, display the major.minor of the first entry.
+// Fall back to the pinned DDRAGON_VERSION if the CDN is unreachable.
+const { data: ddragonVersions } = await useFetch<string[]>(
+  'https://ddragon.leagueoflegends.com/api/versions.json',
+  {
+    key: 'ddragon-versions',
+    server: true,
+    default: () => [DDRAGON_VERSION],
+  },
+)
+
+const patchShort = computed<string>(() => {
+  const latest = ddragonVersions.value?.[0] ?? DDRAGON_VERSION
+  return latest.split('.').slice(0, 2).join('.')
+})
 
 const marqueeItems = [
   'патч 26.08',
