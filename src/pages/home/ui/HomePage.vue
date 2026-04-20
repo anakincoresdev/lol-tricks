@@ -1,7 +1,12 @@
 <template>
   <div class="home-page dotted-bg">
     <div class="home-page__bg" aria-hidden="true">
-      <div class="home-page__bg-art" />
+      <img
+        :src="getChampionSplashUrl('Jinx')"
+        alt=""
+        class="home-page__bg-img"
+        referrerpolicy="no-referrer"
+      />
       <div class="home-page__bg-tint" />
       <div class="home-page__bg-dots" />
       <div class="home-page__bg-fade" />
@@ -134,7 +139,11 @@
 </template>
 
 <script setup lang="ts">
-import { APP_NAME, getChampionImageUrl } from '~/src/shared/config'
+import {
+  APP_NAME,
+  getChampionImageUrl,
+  getChampionSplashUrl,
+} from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
 import { SearchAutocomplete } from '~/src/widgets/search-autocomplete'
 
@@ -191,27 +200,14 @@ const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
   overflow: hidden;
 }
 
-.home-page__bg-art {
+.home-page__bg-img {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(
-      ellipse at 72% 42%,
-      rgba(255, 46, 166, 0.55) 0%,
-      transparent 48%
-    ),
-    radial-gradient(
-      ellipse at 95% 70%,
-      rgba(34, 231, 255, 0.4) 0%,
-      transparent 52%
-    ),
-    radial-gradient(
-      ellipse at 55% 15%,
-      rgba(124, 58, 237, 0.35) 0%,
-      transparent 45%
-    ),
-    linear-gradient(135deg, #1a1d27 0%, #0a0b0f 70%);
-  mix-blend-mode: screen;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center right;
+  filter: saturate(1.15) contrast(1.05);
   mask-image: linear-gradient(
     90deg,
     transparent 0%,
@@ -226,7 +222,6 @@ const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
     #000 55%,
     #000 100%
   );
-  filter: saturate(1.1) contrast(1.05);
 }
 
 .home-page__bg-tint {
@@ -298,15 +293,26 @@ const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
 .home-page__title {
   display: flex;
   flex-direction: column;
-  font-size: clamp(48px, 6.5vw, 96px);
-  line-height: 0.88;
-  letter-spacing: -0.05em;
+  gap: 4px;
+  font-family: 'Unbounded', 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: clamp(44px, 5.6vw, 84px);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
   color: var(--fg);
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  text-shadow: 0 2px 24px rgba(10, 11, 15, 0.7);
+}
+
+.home-page__title-line {
+  display: inline-block;
 }
 
 .home-page__title-line--accent {
   color: var(--acid);
+  text-shadow:
+    0 2px 24px rgba(10, 11, 15, 0.7),
+    0 0 40px rgba(198, 255, 61, 0.25);
 }
 
 .home-page__subcopy {
