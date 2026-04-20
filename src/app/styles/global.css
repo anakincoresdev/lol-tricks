@@ -130,6 +130,36 @@ select {
   color: var(--bg);
 }
 
+.glitch {
+  position: relative;
+  display: inline-block;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.glitch::before {
+  color: var(--mag);
+  transform: translate(-3px, 0);
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  mix-blend-mode: screen;
+}
+
+.glitch::after {
+  color: var(--cyan);
+  transform: translate(3px, 0);
+  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  mix-blend-mode: screen;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;

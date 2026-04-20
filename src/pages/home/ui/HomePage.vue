@@ -20,7 +20,10 @@
 
         <h1 class="home-page__title display">
           <span class="home-page__title-line">Узнай, что</span>
-          <span class="home-page__title-line">собирают лучшие</span>
+          <span class="home-page__title-line">
+            собирают
+            <span class="glitch" data-text="лучшие">лучшие</span>
+          </span>
           <span class="home-page__title-line home-page__title-line--accent">
             OTP игроки.
           </span>
@@ -289,12 +292,12 @@ const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
 .home-page__title {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-family: 'Chakra Petch', 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: clamp(52px, 7vw, 108px);
+  gap: 4px;
+  font-family: 'Archivo Black', 'Space Grotesk', sans-serif;
+  font-weight: 400;
+  font-size: clamp(48px, 6.4vw, 100px);
   line-height: 0.92;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.03em;
   text-transform: uppercase;
   color: var(--fg);
   margin-bottom: 28px;
