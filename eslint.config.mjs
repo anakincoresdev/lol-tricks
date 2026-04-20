@@ -4,6 +4,11 @@ import eslintPluginPrettier from 'eslint-plugin-prettier'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
 export default withNuxt(
+  // Global ignores
+  {
+    ignores: ['_design/**'],
+  },
+
   // Global settings
   {
     languageOptions: {

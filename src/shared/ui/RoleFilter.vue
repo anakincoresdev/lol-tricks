@@ -3,7 +3,7 @@
     <button
       v-for="role in ROLES"
       :key="role.id"
-      class="role-filter__btn"
+      class="role-filter__btn mono"
       :class="{ 'role-filter__btn--active': modelValue === role.id }"
       @click="emit('update:modelValue', role.id)"
     >
@@ -33,32 +33,34 @@ const emit = defineEmits<{
 }
 
 .role-filter__btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  color: #8a8a9a;
-  font-size: 0.875rem;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.1s;
 }
 
 .role-filter__btn:hover {
-  background: rgba(200, 155, 60, 0.1);
-  border-color: rgba(200, 155, 60, 0.3);
-  color: #f0e6d2;
+  border-color: var(--acid);
+  color: var(--acid);
 }
 
 .role-filter__btn--active {
-  background: rgba(200, 155, 60, 0.15);
-  border-color: #c89b3c;
-  color: #c89b3c;
+  background: var(--acid);
+  border-color: var(--acid);
+  color: var(--bg);
 }
 
 .role-filter__name {
-  font-weight: 500;
+  font-weight: 600;
 }
 </style>

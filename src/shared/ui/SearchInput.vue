@@ -47,32 +47,32 @@ function onInput(event: Event): void {
 
 .search-input__icon {
   position: absolute;
-  left: 16px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #5a5a6a;
+  color: var(--fg-dim);
   pointer-events: none;
 }
 
 .search-input__field {
   width: 100%;
-  padding: 12px 16px 12px 48px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(200, 155, 60, 0.2);
-  border-radius: 12px;
-  color: #e0e0e0;
-  font-size: 1rem;
+  padding: 12px 16px 12px 42px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 15px;
   outline: none;
-  transition: all 0.2s;
+  transition: border-color 0.15s;
 }
 
 .search-input__field::placeholder {
-  color: #5a5a6a;
+  color: var(--fg-dim);
 }
 
 .search-input__field:focus {
-  border-color: rgba(200, 155, 60, 0.5);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(200, 155, 60, 0.1);
+  border-color: var(--acid);
 }
 </style>

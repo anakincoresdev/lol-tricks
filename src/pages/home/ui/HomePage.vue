@@ -1,25 +1,32 @@
 <template>
-  <div class="home-page">
+  <div class="home-page dotted-bg">
     <section class="home-page__hero">
       <div class="home-page__hero-bg" />
       <div class="home-page__hero-content">
-        <h1 class="home-page__title">{{ APP_NAME }}</h1>
+        <span class="home-page__live mono">
+          ⚡ LIVE · 18,422 MATCHES INDEXED TODAY
+        </span>
+        <h1 class="home-page__title display">
+          {{ APP_NAME }}
+          <span class="home-page__title-dot">.</span>
+        </h1>
         <p class="home-page__subtitle">
           Узнай, что собирают лучшие OTP игроки на твоём чемпионе
         </p>
         <div class="home-page__search">
           <SearchAutocomplete />
         </div>
-        <p class="home-page__hint">
-          Начни вводить имя чемпиона на русском или английском
+        <p class="home-page__hint mono">
+          ↳ Начни вводить имя чемпиона на русском или английском
         </p>
         <div class="home-page__popular">
-          <span class="home-page__popular-label">Популярные:</span>
+          <span class="home-page__popular-label mono">Популярные:</span>
           <NuxtLink
-            v-for="champ in popularChampions"
+            v-for="(champ, i) in popularChampions"
             :key="champ.id"
             :to="`/champion/${champ.id}`"
-            class="home-page__popular-tag"
+            class="home-page__popular-tag stick"
+            :class="`home-page__popular-tag--tilt-${(i % 3) + 1}`"
           >
             <img
               :src="getChampionImageUrl(champ.id)"
@@ -27,7 +34,9 @@
               class="home-page__popular-icon"
               loading="lazy"
             />
-            {{ champ.name }}
+            <span class="display home-page__popular-name">
+              {{ champ.name }}
+            </span>
           </NuxtLink>
         </div>
       </div>
@@ -59,122 +68,176 @@ const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
 
 <style scoped>
 .home-page {
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 64px);
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .home-page__hero {
   position: relative;
-  padding: 2rem 1.5rem;
+  padding: 72px 24px 56px;
   display: flex;
   justify-content: center;
   width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .home-page__hero-bg {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 0;
+  right: -10%;
+  width: 70%;
+  height: 100%;
+  pointer-events: none;
   background:
     radial-gradient(
-      ellipse at 50% 30%,
-      rgba(200, 155, 60, 0.08) 0%,
-      transparent 60%
+      ellipse at 75% 40%,
+      rgba(255, 46, 166, 0.22) 0%,
+      transparent 55%
     ),
     radial-gradient(
-      ellipse at 80% 60%,
-      rgba(100, 60, 180, 0.04) 0%,
+      ellipse at 95% 80%,
+      rgba(34, 231, 255, 0.18) 0%,
       transparent 50%
     );
-  pointer-events: none;
+  mix-blend-mode: screen;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 35%, #000 100%);
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 35%,
+    #000 100%
+  );
 }
 
 .home-page__hero-content {
   position: relative;
-  text-align: center;
-  max-width: 640px;
+  text-align: left;
+  max-width: 720px;
   width: 100%;
+  z-index: 1;
+}
+
+.home-page__live {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--mag);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  transform: rotate(-2deg);
 }
 
 .home-page__title {
-  font-size: 4.5rem;
-  font-weight: 900;
-  background: linear-gradient(135deg, #c89b3c 0%, #f0e6d2 50%, #c89b3c 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 0.75rem;
-  letter-spacing: -0.02em;
+  font-size: clamp(48px, 6.5vw, 96px);
+  line-height: 0.88;
+  letter-spacing: -0.05em;
+  color: var(--fg);
+  margin-bottom: 24px;
+}
+
+.home-page__title-dot {
+  color: var(--mag);
 }
 
 .home-page__subtitle {
-  font-size: 1.2rem;
-  color: #8a8a9a;
-  margin-bottom: 2.5rem;
-  line-height: 1.6;
+  font-size: 18px;
+  color: var(--fg-dim);
+  max-width: 560px;
+  margin-bottom: 36px;
+  line-height: 1.45;
 }
 
 .home-page__search {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .home-page__hint {
-  font-size: 0.8rem;
-  color: #4a4a5a;
-  margin-bottom: 3rem;
+  font-size: 11px;
+  color: var(--fg-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 36px;
 }
 
 .home-page__popular {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
 .home-page__popular-label {
-  font-size: 0.8rem;
-  color: #5a5a6a;
+  font-size: 11px;
+  color: var(--fg-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   margin-right: 4px;
 }
 
 .home-page__popular-tag {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px 5px 5px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(200, 155, 60, 0.12);
-  border-radius: 20px;
-  color: #b0b0c0;
-  font-size: 0.82rem;
-  font-weight: 500;
+  gap: 10px;
+  padding: 8px 14px 8px 8px;
+  border-radius: 999px;
+  color: var(--fg);
   text-decoration: none;
-  transition: all 0.2s;
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
 }
 
 .home-page__popular-tag:hover {
-  background: rgba(200, 155, 60, 0.1);
-  border-color: rgba(200, 155, 60, 0.3);
-  color: #f0e6d2;
+  transform: scale(1.05);
+  border-color: var(--acid);
+}
+
+.home-page__popular-tag--tilt-1 {
+  transform: rotate(-2deg);
+}
+.home-page__popular-tag--tilt-2 {
+  transform: rotate(1.5deg);
+}
+.home-page__popular-tag--tilt-3 {
+  transform: rotate(-0.8deg);
+}
+.home-page__popular-tag--tilt-1:hover {
+  transform: rotate(-2deg) scale(1.05);
+}
+.home-page__popular-tag--tilt-2:hover {
+  transform: rotate(1.5deg) scale(1.05);
+}
+.home-page__popular-tag--tilt-3:hover {
+  transform: rotate(-0.8deg) scale(1.05);
 }
 
 .home-page__popular-icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.home-page__popular-name {
+  font-size: 14px;
+  font-weight: 600;
 }
 
 @media (max-width: 640px) {
   .home-page__title {
-    font-size: 2.8rem;
+    font-size: clamp(40px, 10vw, 72px);
   }
 
   .home-page__subtitle {
-    font-size: 1rem;
+    font-size: 16px;
   }
 }
 </style>

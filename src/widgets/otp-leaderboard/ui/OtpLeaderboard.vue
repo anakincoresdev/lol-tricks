@@ -164,113 +164,129 @@ function getRankClass(tier: string): string {
 
 <style scoped>
 .otp-leaderboard {
-  padding: 3rem 0;
-  border-top: 1px solid rgba(200, 155, 60, 0.1);
+  padding: 48px 0;
+  border-top: 1px solid var(--border);
 }
 
 .otp-leaderboard__header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
 }
 
 .otp-leaderboard__title {
-  font-size: 1.75rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
   font-weight: 700;
-  color: #f0e6d2;
-  margin-bottom: 0.25rem;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  margin-bottom: 6px;
 }
 
 .otp-leaderboard__subtitle {
-  font-size: 0.95rem;
-  color: #6a6a7a;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--fg-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
 }
 
 .otp-leaderboard__controls {
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 8px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
 }
 
 .otp-leaderboard__select {
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(200, 155, 60, 0.2);
-  border-radius: 8px;
-  color: #e0e0e0;
-  font-size: 0.9rem;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
   outline: none;
   cursor: pointer;
 }
 
 .otp-leaderboard__select:focus {
-  border-color: rgba(200, 155, 60, 0.5);
+  border-color: var(--acid);
 }
 
 .otp-leaderboard__select option {
-  background: #1a1a2e;
-  color: #e0e0e0;
+  background: var(--bg);
+  color: var(--fg);
 }
 
 .otp-leaderboard__btn {
   padding: 8px 20px;
-  background: linear-gradient(135deg, #c89b3c, #a07830);
+  background: var(--acid);
   border: none;
-  border-radius: 8px;
-  color: #0a0a0f;
-  font-size: 0.9rem;
-  font-weight: 600;
+  border-radius: 4px;
+  color: var(--bg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: opacity 0.15s;
 }
 
 .otp-leaderboard__btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #d4a84a, #b08838);
-  transform: translateY(-1px);
+  opacity: 0.85;
 }
 
 .otp-leaderboard__btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .otp-leaderboard__error {
   padding: 12px 16px;
-  background: rgba(224, 80, 80, 0.1);
-  border: 1px solid rgba(224, 80, 80, 0.3);
-  border-radius: 8px;
-  color: #e05050;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+  background: color-mix(in oklab, var(--red) 10%, transparent);
+  border: 1px solid var(--red);
+  border-radius: 4px;
+  color: var(--red);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  margin-bottom: 16px;
 }
 
 .otp-leaderboard__loading {
-  padding: 2rem;
+  padding: 32px;
   text-align: center;
-  color: #8a8a9a;
+  color: var(--fg-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .otp-leaderboard__table-wrapper {
   overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid rgba(200, 155, 60, 0.15);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .otp-leaderboard__table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
 }
 
 .otp-leaderboard__th {
   text-align: left;
-  padding: 12px 16px;
-  color: #6a6a7a;
+  padding: 10px 14px;
+  color: var(--fg-dim);
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: rgba(200, 155, 60, 0.05);
-  border-bottom: 1px solid rgba(200, 155, 60, 0.1);
+  letter-spacing: 0.12em;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
@@ -281,27 +297,30 @@ function getRankClass(tier: string): string {
 
 .otp-leaderboard__row {
   transition: background 0.15s;
+  border-bottom: 1px solid var(--border);
 }
 
 .otp-leaderboard__row:hover {
-  background: rgba(200, 155, 60, 0.05);
+  background: var(--bg-2);
 }
 
 .otp-leaderboard__td {
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 14px 14px;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 .otp-leaderboard__td--rank {
   text-align: center;
-  color: #6a6a7a;
+  color: var(--fg-dim);
   font-weight: 700;
 }
 
 .otp-leaderboard__td--name {
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
-  color: #e0e0e0;
+  font-size: 14px;
+  color: var(--fg);
 }
 
 .otp-leaderboard__td--champion {
@@ -313,45 +332,52 @@ function getRankClass(tier: string): string {
 .otp-leaderboard__champion-icon {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  border: 1px solid rgba(200, 155, 60, 0.3);
+  border-radius: 3px;
+  border: 1px solid var(--border);
 }
 
 .otp-leaderboard__rank-badge {
-  font-size: 0.8rem;
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
   font-weight: 600;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
 }
 
 .otp-leaderboard__rank-badge--challenger {
-  color: #f0c040;
-  background: rgba(240, 192, 64, 0.1);
+  color: var(--bg);
+  background: var(--mag);
 }
 
 .otp-leaderboard__rank-badge--grandmaster {
-  color: #e05050;
-  background: rgba(224, 80, 80, 0.1);
+  color: var(--bg);
+  background: var(--cyan);
 }
 
 .otp-leaderboard__rank-badge--master {
-  color: #b060e0;
-  background: rgba(176, 96, 224, 0.1);
+  color: var(--bg);
+  background: var(--acid);
 }
 
 .otp-leaderboard__td--high-wr {
-  color: #4ec97a;
+  color: var(--acid);
   font-weight: 600;
 }
 
 .otp-leaderboard__td--otp {
-  color: #c89b3c;
+  color: var(--acid);
   font-weight: 700;
 }
 
 .otp-leaderboard__empty {
   text-align: center;
-  padding: 2rem;
-  color: #5a5a6a;
+  padding: 32px;
+  color: var(--fg-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 </style>

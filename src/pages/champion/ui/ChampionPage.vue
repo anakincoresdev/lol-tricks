@@ -490,165 +490,192 @@ onMounted(() => {
 
 <style scoped>
 .champ-page {
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 64px);
 }
 
 .champ-page__container {
-  max-width: 1080px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 40px 24px 64px;
 }
 
 .champ-page__back {
   display: inline-block;
-  color: #6a6a7a;
-  font-size: 0.9rem;
+  color: var(--fg-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   text-decoration: none;
-  margin-bottom: 1.5rem;
-  transition: color 0.2s;
+  margin-bottom: 24px;
+  transition: color 0.15s;
 }
 
 .champ-page__back:hover {
-  color: #c89b3c;
+  color: var(--acid);
 }
 
 .champ-page__hero {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 1.5rem;
+  gap: 24px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
 }
 
 .champ-page__icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 2px solid rgba(200, 155, 60, 0.4);
+  width: 112px;
+  height: 112px;
+  border-radius: 4px;
+  border: 2px solid var(--acid);
+  flex-shrink: 0;
+  transform: rotate(-2deg);
 }
 
 .champ-page__info {
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
 .champ-page__name {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #f0e6d2;
-  line-height: 1.2;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--fg-dim);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 
 .champ-page__title {
-  font-size: 0.9rem;
-  color: #6a6a7a;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 72px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--fg);
 }
 
 /* Filters */
 .champ-page__filters {
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .champ-page__region-groups {
   display: flex;
-  gap: 4px;
-  margin-bottom: 12px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .champ-page__group-tab {
-  padding: 8px 18px;
+  padding: 6px 14px;
   background: transparent;
-  border: none;
-  border-radius: 8px;
-  color: #6a6a7a;
-  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.1s;
 }
 
 .champ-page__group-tab:hover {
-  color: #e0e0e0;
+  border-color: var(--cyan);
+  color: var(--cyan);
 }
 
 .champ-page__group-tab--active {
-  background: #2563eb;
-  color: #fff;
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: var(--bg);
 }
 
 .champ-page__region-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .champ-page__region-tab {
-  padding: 6px 14px;
+  padding: 6px 12px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  color: #6a6a7a;
-  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.1s;
 }
 
 .champ-page__region-tab:hover {
-  color: #e0e0e0;
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--acid);
+  color: var(--acid);
 }
 
 .champ-page__region-tab--active {
-  color: #e0e0e0;
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--acid);
+  border-color: var(--acid);
+  color: var(--bg);
 }
 
 .champ-page__role-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-top: 10px;
 }
 
 .champ-page__role-tab {
-  padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  color: #8a8a9a;
-  font-size: 0.85rem;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.1s;
 }
 
 .champ-page__role-tab:hover {
-  background: rgba(200, 155, 60, 0.08);
-  border-color: rgba(200, 155, 60, 0.25);
-  color: #f0e6d2;
+  border-color: var(--mag);
+  color: var(--mag);
 }
 
 .champ-page__role-tab--active {
-  background: rgba(200, 155, 60, 0.15);
-  border-color: #c89b3c;
-  color: #c89b3c;
+  background: var(--mag);
+  border-color: var(--mag);
+  color: #fff;
 }
 
 /* Loading */
 .champ-page__loading {
   text-align: center;
-  padding: 3rem 1rem;
-  color: #8a8a9a;
+  padding: 48px 16px;
+  color: var(--fg-dim);
 }
 
 .champ-page__spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(200, 155, 60, 0.15);
-  border-top-color: #c89b3c;
+  border: 3px solid var(--border);
+  border-top-color: var(--acid);
   border-radius: 50%;
-  margin: 0 auto 1rem;
+  margin: 0 auto 16px;
   animation: spin 0.8s linear infinite;
 }
 
@@ -659,46 +686,51 @@ onMounted(() => {
 }
 
 .champ-page__loading-hint {
-  font-size: 0.8rem;
-  color: #5a5a6a;
-  margin-top: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  margin-top: 8px;
 }
 
 .champ-page__error {
   padding: 12px 16px;
-  background: rgba(224, 80, 80, 0.1);
-  border: 1px solid rgba(224, 80, 80, 0.3);
-  border-radius: 10px;
-  color: #e05050;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+  background: color-mix(in oklab, var(--red) 10%, transparent);
+  border: 1px solid var(--red);
+  border-radius: 4px;
+  color: var(--red);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  margin-bottom: 16px;
 }
 
 /* Table */
 .champ-page__table-wrapper {
   overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.015);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .champ-page__table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
 }
 
 .champ-page__th {
   text-align: left;
-  padding: 12px 16px;
-  color: #6a6a7a;
+  padding: 10px 14px;
+  color: var(--fg-dim);
   font-weight: 600;
-  font-size: 0.72rem;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  letter-spacing: 0.12em;
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg);
 }
 
 .champ-page__th--rank {
@@ -732,11 +764,11 @@ onMounted(() => {
 }
 
 .champ-page__th--sortable:hover {
-  color: #c89b3c;
+  color: var(--acid);
 }
 
 .champ-page__th--active {
-  color: #c89b3c;
+  color: var(--acid);
 }
 
 .champ-page__th--runes {
@@ -747,7 +779,7 @@ onMounted(() => {
 .champ-page__row {
   cursor: pointer;
   transition: background 0.15s;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border);
 }
 
 .champ-page__row:last-child {
@@ -755,18 +787,18 @@ onMounted(() => {
 }
 
 .champ-page__row:hover {
-  background: rgba(200, 155, 60, 0.04);
+  background: var(--bg-2);
 }
 
 .champ-page__td {
-  padding: 12px 16px;
+  padding: 14px 14px;
   vertical-align: middle;
   white-space: nowrap;
 }
 
 .champ-page__td--rank {
   text-align: center;
-  color: #6a6a7a;
+  color: var(--fg-dim);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -782,26 +814,28 @@ onMounted(() => {
 }
 
 .champ-page__player-name {
-  color: #4a9eff;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
+  font-size: 14px;
+  color: var(--fg);
 }
 
 .champ-page__player-tag {
-  color: #5a5a6a;
+  color: var(--fg-dim);
   font-weight: 400;
-  font-size: 0.78rem;
+  font-size: 11px;
   margin-top: 2px;
 }
 
 .champ-page__region-badge {
   display: inline-block;
-  padding: 3px 8px;
-  border-radius: 4px;
-  background: rgba(200, 155, 60, 0.1);
-  color: #c89b3c;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--fg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
 .champ-page__tier-cell {
@@ -823,14 +857,14 @@ onMounted(() => {
 }
 
 .champ-page__tier-name {
-  color: #e0e0e0;
+  color: var(--fg);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 12px;
 }
 
 .champ-page__tier-lp {
-  color: #8a8a9a;
-  font-size: 0.75rem;
+  color: var(--fg-dim);
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -846,45 +880,45 @@ onMounted(() => {
 }
 
 .champ-page__games-total {
-  color: #e0e0e0;
+  color: var(--fg);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 
 .champ-page__games-wl {
-  font-size: 0.72rem;
-  color: #6a6a7a;
+  font-size: 10px;
+  color: var(--fg-dim);
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
 }
 
 .champ-page__games-w {
-  color: #4ec97a;
+  color: var(--acid);
 }
 
 .champ-page__games-l {
-  color: #e06868;
+  color: var(--red);
 }
 
 .champ-page__games-sep {
   margin: 0 3px;
-  color: #3a3a4a;
+  color: var(--border);
 }
 
 .champ-page__td--wr {
   text-align: right;
-  color: #8a8a9a;
+  color: var(--fg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .champ-page__td--high-wr {
-  color: #4ec97a;
+  color: var(--acid);
 }
 
 .champ-page__td--low-wr {
-  color: #e06868;
+  color: var(--red);
 }
 
 .champ-page__td--runes {
@@ -901,20 +935,20 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg);
   border-radius: 50%;
 }
 
 .champ-page__rune--primary {
   width: 32px;
   height: 32px;
-  border: 1px solid rgba(200, 155, 60, 0.3);
+  border: 1px solid var(--border);
 }
 
 .champ-page__rune--secondary {
   width: 20px;
   height: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
 }
 
 .champ-page__rune-icon {
@@ -929,20 +963,25 @@ onMounted(() => {
 }
 
 .champ-page__runes-empty {
-  color: #3a3a4a;
-  font-size: 0.9rem;
+  color: var(--border);
+  font-size: 14px;
 }
 
 .champ-page__empty {
   text-align: center;
-  padding: 3rem 1rem;
-  color: #5a5a6a;
+  padding: 48px 16px;
+  color: var(--fg-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .champ-page__empty-hint {
-  font-size: 0.85rem;
-  margin-top: 0.5rem;
-  color: #4a4a5a;
+  font-size: 11px;
+  margin-top: 8px;
+  color: var(--fg-dim);
+  opacity: 0.7;
 }
 
 @media (max-width: 820px) {
@@ -962,23 +1001,13 @@ onMounted(() => {
 }
 
 @media (max-width: 640px) {
-  .champ-page__name {
-    font-size: 1.3rem;
+  .champ-page__title {
+    font-size: 40px;
   }
 
   .champ-page__icon {
-    width: 44px;
-    height: 44px;
-  }
-
-  .champ-page__group-tab {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-  }
-
-  .champ-page__region-tab {
-    padding: 5px 10px;
-    font-size: 0.8rem;
+    width: 72px;
+    height: 72px;
   }
 
   .champ-page__th,

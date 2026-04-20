@@ -53,30 +53,32 @@ const filteredChampions = computed(() => {
 
 <style scoped>
 .champion-grid {
-  padding: 3rem 0;
+  padding: 48px 0;
 }
 
 .champion-grid__header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
 }
 
 .champion-grid__title {
-  font-size: 1.75rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
   font-weight: 700;
-  color: #f0e6d2;
-  margin-bottom: 0.25rem;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  margin-bottom: 6px;
 }
 
 .champion-grid__subtitle {
-  font-size: 0.95rem;
-  color: #6a6a7a;
+  font-size: 14px;
+  color: var(--fg-dim);
 }
 
 .champion-grid__controls {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 12px;
+  margin-bottom: 32px;
 }
 
 .champion-grid__list {
@@ -87,16 +89,19 @@ const filteredChampions = computed(() => {
 
 .champion-grid__empty {
   text-align: center;
-  padding: 3rem;
-  color: #5a5a6a;
-  font-size: 1rem;
+  padding: 48px;
+  color: var(--fg-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 @media (min-width: 768px) {
   .champion-grid__controls {
     flex-direction: row;
     align-items: center;
-    gap: 1.5rem;
+    gap: 20px;
   }
 
   .champion-grid__list {
