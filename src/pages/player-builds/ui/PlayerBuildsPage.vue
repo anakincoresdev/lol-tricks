@@ -2,20 +2,26 @@
   <div class="builds-page">
     <div class="builds-page__container">
       <NuxtLink :to="`/champion/${championId}`" class="builds-page__back">
-        &larr; Назад к игрокам
+        {{ t('playerBuilds.backToPlayers') }}
       </NuxtLink>
 
       <div v-if="champion" class="builds-page__hero">
         <img
           :src="getChampionImageUrl(champion.id)"
-          :alt="champion.name"
+          :alt="championDisplayName(champion, locale)"
           class="builds-page__champ-icon"
         />
         <div class="builds-page__hero-info">
           <h1 class="builds-page__title">
             {{ displayName }}
           </h1>
-          <p class="builds-page__subtitle">Билды на {{ champion.name }}</p>
+          <p class="builds-page__subtitle">
+            {{
+              t('playerBuilds.subtitle', {
+                champion: championDisplayName(champion, locale),
+              })
+            }}
+          </p>
           <div
             v-if="data && data.masteryPoints > 0"
             class="builds-page__mastery"
@@ -23,16 +29,26 @@
             <span class="builds-page__mastery-level">
               Lvl {{ data.masteryLevel }}
             </span>
-            {{ formatMastery(data.masteryPoints) }} очков мастерства
+            {{
+              t('playerBuilds.masteryPoints', {
+                value: formatMastery(data.masteryPoints),
+              })
+            }}
           </div>
         </div>
       </div>
 
       <div v-if="loading" class="builds-page__loading">
         <div class="builds-page__spinner" />
-        <p>Загружаем матчи...</p>
+        <p>{{ t('playerBuilds.loading') }}</p>
         <p class="builds-page__loading-hint">
-          Анализируем последние игры на {{ champion?.name ?? championId }}
+          {{
+            t('playerBuilds.loadingHint', {
+              champion: champion
+                ? championDisplayName(champion, locale)
+                : championId,
+            })
+          }}
         </p>
       </div>
 
@@ -45,7 +61,7 @@
         class="builds-page__results"
       >
         <h2 class="builds-page__results-title">
-          Найдено {{ data.matches.length }} матчей
+          {{ t('playerBuilds.foundMatches', { count: data.matches.length }) }}
         </h2>
 
         <div class="builds-page__matches">
@@ -66,7 +82,11 @@
                     : 'builds-page__match-badge--loss'
                 "
               >
-                {{ match.win ? 'W' : 'L' }}
+                {{
+                  match.win
+                    ? t('championPage.winsLetter')
+                    : t('championPage.lossesLetter')
+                }}
               </span>
               <span class="builds-page__match-duration">
                 {{ formatDuration(match.gameDuration) }}
@@ -79,7 +99,7 @@
               </span>
               <span class="builds-page__kda-ratio">
                 {{ formatKda(match.kills, match.deaths, match.assists) }}
-                KDA
+                {{ t('playerBuilds.kdaLabel') }}
               </span>
             </div>
 
@@ -123,9 +143,17 @@
         v-if="data && data.matches.length === 0 && !loading"
         class="builds-page__empty"
       >
-        <p>Нет недавних матчей на {{ champion?.name ?? championId }}.</p>
+        <p>
+          {{
+            t('playerBuilds.emptyNoMatches', {
+              champion: champion
+                ? championDisplayName(champion, locale)
+                : championId,
+            })
+          }}
+        </p>
         <p class="builds-page__empty-hint">
-          Игрок давно не играл на этом чемпионе в ранкеде.
+          {{ t('playerBuilds.emptyHint') }}
         </p>
       </div>
     </div>
@@ -135,9 +163,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getChampionImageUrl, getItemImageUrl } from '~/src/shared/config'
-import { CHAMPIONS } from '~/src/entities/champion'
+import { CHAMPIONS, championDisplayName } from '~/src/entities/champion'
 import { api, ApiError } from '~/src/shared/api'
 import type { PlayerChampionMatchesResponse } from '~/src/shared/api'
+import { useI18n } from '#imports'
+
+const { t, locale } = useI18n()
 
 const route = useRoute()
 const championId = route.params['id'] as string
@@ -157,27 +188,30 @@ const displayName = computed(() => {
   if (data.value?.gameName && data.value.gameName !== 'Unknown') {
     return data.value.gameName
   }
-  return nameFromQuery ?? 'Игрок'
+  return nameFromQuery ?? t('playerBuilds.defaultPlayerName')
 })
 
 useHead({
-  title: computed(
-    () => `${displayName.value} — ${champion?.name ?? championId} | LoL Tricks`,
-  ),
+  title: computed(() => {
+    const champName = champion
+      ? championDisplayName(champion, locale.value)
+      : championId
+    return `${displayName.value} — ${champName} | ${t('app.name')}`
+  }),
 })
 
 const errorMessage = computed(() => {
   if (!error.value) return ''
   if (error.value.includes('403')) {
-    return 'API ключ недействителен или истёк.'
+    return t('errors.apiKeyExpired')
   }
   if (error.value.includes('429')) {
-    return 'Превышен лимит запросов. Подожди немного и попробуй снова.'
+    return t('errors.rateLimited')
   }
   if (error.value.includes('504') || error.value.includes('timeout')) {
-    return 'Сервер не успел ответить. Попробуй позже.'
+    return t('errors.timeoutRetry')
   }
-  return `Ошибка: ${error.value}`
+  return t('common.error', { message: error.value })
 })
 
 function formatMastery(points: number): string {
@@ -197,7 +231,7 @@ function formatDuration(seconds: number): string {
 }
 
 function formatKda(kills: number, deaths: number, assists: number): string {
-  if (deaths === 0) return 'Perfect'
+  if (deaths === 0) return t('playerBuilds.perfect')
   return ((kills + assists) / deaths).toFixed(1)
 }
 
@@ -207,10 +241,10 @@ function formatDate(timestamp: number): string {
   const diffMs = now.getTime() - date.getTime()
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffDays === 0) return 'Сегодня'
-  if (diffDays === 1) return 'Вчера'
-  if (diffDays < 7) return `${diffDays} дн. назад`
-  return date.toLocaleDateString('ru-RU', {
+  if (diffDays === 0) return t('playerBuilds.date.today')
+  if (diffDays === 1) return t('playerBuilds.date.yesterday')
+  if (diffDays < 7) return t('playerBuilds.date.daysAgo', { days: diffDays })
+  return date.toLocaleDateString(locale.value, {
     day: 'numeric',
     month: 'short',
   })
@@ -228,7 +262,7 @@ async function loadMatches(): Promise<void> {
         ? e.message
         : e instanceof Error
           ? e.message
-          : 'Unknown error'
+          : t('common.unknownError')
   } finally {
     loading.value = false
   }

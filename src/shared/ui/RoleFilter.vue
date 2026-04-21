@@ -7,7 +7,7 @@
       :class="{ 'role-filter__btn--active': modelValue === role.id }"
       @click="emit('update:modelValue', role.id)"
     >
-      <span class="role-filter__name">{{ role.name }}</span>
+      <span class="role-filter__name">{{ t(`roles.${role.id}`) }}</span>
     </button>
   </div>
 </template>
@@ -15,6 +15,7 @@
 <script setup lang="ts">
 import { ROLES } from '~/src/shared/config/roles'
 import type { RoleId } from '~/src/shared/config/roles'
+import { useI18n } from '#imports'
 
 defineProps<{
   modelValue: RoleId
@@ -23,6 +24,8 @@ defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: RoleId]
 }>()
+
+const { t } = useI18n()
 </script>
 
 <style scoped>

@@ -16,13 +16,15 @@
       :value="modelValue"
       type="text"
       class="search-input__field"
-      :placeholder="placeholder"
+      :placeholder="placeholder ?? t('searchInput.placeholder')"
       @input="onInput"
     />
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '#imports'
+
 defineProps<{
   modelValue: string
   placeholder?: string
@@ -31,6 +33,8 @@ defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
+
+const { t } = useI18n()
 
 function onInput(event: Event): void {
   const target = event.target as HTMLInputElement

@@ -1,25 +1,31 @@
 <template>
   <section class="otp-leaderboard">
     <div class="otp-leaderboard__header">
-      <h2 class="otp-leaderboard__title">OTP Рейтинг (Live)</h2>
+      <h2 class="otp-leaderboard__title">{{ t('otpLeaderboard.title') }}</h2>
       <p class="otp-leaderboard__subtitle">
-        Реальные данные из Riot API — топ ваншотеров
+        {{ t('otpLeaderboard.subtitle') }}
       </p>
     </div>
 
     <div class="otp-leaderboard__controls">
       <select v-model="selectedRegion" class="otp-leaderboard__select">
         <option v-for="r in REGIONS" :key="r.code" :value="r.code">
-          {{ r.name }}
+          {{ t(`regions.${r.code}`) }}
         </option>
       </select>
       <select v-model="selectedTier" class="otp-leaderboard__select">
-        <option value="challenger">Challenger</option>
-        <option value="grandmaster">Grandmaster</option>
-        <option value="master">Master</option>
+        <option value="challenger">
+          {{ t('otpLeaderboard.tiers.challenger') }}
+        </option>
+        <option value="grandmaster">
+          {{ t('otpLeaderboard.tiers.grandmaster') }}
+        </option>
+        <option value="master">
+          {{ t('otpLeaderboard.tiers.master') }}
+        </option>
       </select>
       <button class="otp-leaderboard__btn" :disabled="loading" @click="load">
-        {{ loading ? 'Загрузка...' : 'Загрузить' }}
+        {{ loading ? t('common.loading') : t('common.load') }}
       </button>
     </div>
 
@@ -28,7 +34,7 @@
     </div>
 
     <div v-if="loading" class="otp-leaderboard__loading">
-      <p>Анализируем матчи игроков... Это может занять до минуты.</p>
+      <p>{{ t('otpLeaderboard.analyzing') }}</p>
     </div>
 
     <div
@@ -39,11 +45,21 @@
         <thead>
           <tr>
             <th class="otp-leaderboard__th otp-leaderboard__th--rank">#</th>
-            <th class="otp-leaderboard__th">Игрок</th>
-            <th class="otp-leaderboard__th">Чемпион</th>
-            <th class="otp-leaderboard__th">Ранг</th>
-            <th class="otp-leaderboard__th">WR</th>
-            <th class="otp-leaderboard__th">OTP%</th>
+            <th class="otp-leaderboard__th">
+              {{ t('otpLeaderboard.th.player') }}
+            </th>
+            <th class="otp-leaderboard__th">
+              {{ t('otpLeaderboard.th.champion') }}
+            </th>
+            <th class="otp-leaderboard__th">
+              {{ t('otpLeaderboard.th.rank') }}
+            </th>
+            <th class="otp-leaderboard__th">
+              {{ t('otpLeaderboard.th.wr') }}
+            </th>
+            <th class="otp-leaderboard__th">
+              {{ t('otpLeaderboard.th.otp') }}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -96,8 +112,7 @@
       class="otp-leaderboard__empty"
     >
       <p>
-        Не найдено OTP-игроков с порогом {{ data.otpThreshold }}% среди топ
-        игроков.
+        {{ t('otpLeaderboard.empty', { threshold: data.otpThreshold }) }}
       </p>
     </div>
   </section>
@@ -109,6 +124,9 @@ import { REGIONS, getChampionImageUrl } from '~/src/shared/config'
 import type { RegionCode } from '~/src/shared/config'
 import { api, ApiError } from '~/src/shared/api'
 import type { OtpResponse } from '~/src/shared/api'
+import { useI18n } from '#imports'
+
+const { t } = useI18n()
 
 const selectedRegion = ref<RegionCode>('euw')
 const selectedTier = ref('challenger')
@@ -121,12 +139,12 @@ const errorMessage = computed(() => {
     return ''
   }
   if (error.value.includes('403')) {
-    return 'API ключ недействителен или истёк. Обнови ключ в .env файле.'
+    return t('errors.invalidApiKey')
   }
   if (error.value.includes('429')) {
-    return 'Превышен лимит запросов. Подожди немного и попробуй снова.'
+    return t('errors.rateLimited')
   }
-  return `Ошибка: ${error.value}`
+  return t('common.error', { message: error.value })
 })
 
 async function load(): Promise<void> {
@@ -141,7 +159,7 @@ async function load(): Promise<void> {
         ? e.message
         : e instanceof Error
           ? e.message
-          : 'Unknown error'
+          : t('common.unknownError')
   } finally {
     loading.value = false
   }

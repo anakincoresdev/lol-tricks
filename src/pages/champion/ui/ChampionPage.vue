@@ -1,26 +1,38 @@
 <template>
   <div class="champ-page">
     <div class="champ-page__container">
-      <NuxtLink to="/" class="champ-page__back">&larr; Назад к поиску</NuxtLink>
+      <NuxtLink to="/" class="champ-page__back">
+        {{ t('championPage.backToSearch') }}
+      </NuxtLink>
 
       <div v-if="champion" class="champ-page__hero">
         <img
           :src="getChampionImageUrl(champion.id)"
-          :alt="champion.name"
+          :alt="championDisplayName(champion, locale)"
           class="champ-page__icon"
         />
         <div class="champ-page__info">
           <span class="champ-page__kicker mono">
-            ONE-TRICK INDEX · {{ champion.roles[0]?.toUpperCase() }}
+            {{
+              t('championPage.heroKicker', {
+                role: champion.roles[0]?.toUpperCase() ?? '',
+              })
+            }}
           </span>
-          <h1 class="champ-page__title display">{{ champion.name }}</h1>
+          <h1 class="champ-page__title display">
+            {{ championDisplayName(champion, locale) }}
+          </h1>
           <div class="champ-page__chips">
-            <span class="chip chip--acid">ТОП-100 · ГЛОБАЛЬНО · 60Д</span>
-            <span v-if="heroStats" class="chip">
-              СРЕД. WR НА ЧЕМПЕ {{ heroStats.avgWr }}%
+            <span class="chip chip--acid">
+              {{ t('championPage.chips.scope') }}
             </span>
             <span v-if="heroStats" class="chip">
-              СРЕД. ИГР НА ЧЕМПЕ {{ heroStats.avgGames }}
+              {{ t('championPage.chips.avgWr', { value: heroStats.avgWr }) }}
+            </span>
+            <span v-if="heroStats" class="chip">
+              {{
+                t('championPage.chips.avgGames', { value: heroStats.avgGames })
+              }}
             </span>
             <span v-if="qualityMixLabel" class="chip chip--cyan">
               {{ qualityMixLabel }}
@@ -40,7 +52,7 @@
             }"
             @click="selectGroup(group.id)"
           >
-            {{ group.name }}
+            {{ t(`championPage.groups.${group.id}`) }}
           </button>
         </div>
 
@@ -52,7 +64,7 @@
             }"
             @click="selectRegion('all')"
           >
-            All
+            {{ t('championPage.allRegions') }}
           </button>
           <button
             v-for="region in currentRegions"
@@ -77,16 +89,24 @@
             }"
             @click="selectedRole = role.id"
           >
-            {{ role.name }}
+            {{ t(`roles.${role.id}`) }}
           </button>
         </div>
       </div>
 
       <div v-if="loading" class="champ-page__loading">
         <div class="champ-page__spinner" />
-        <p>Ищем OTP игроков на {{ champion?.name ?? championId }}...</p>
+        <p>
+          {{
+            t('championPage.loading', {
+              champion: champion
+                ? championDisplayName(champion, locale)
+                : championId,
+            })
+          }}
+        </p>
         <p class="champ-page__loading-hint">
-          Сканируем Challenger, Grandmaster и Master
+          {{ t('championPage.loadingHint') }}
         </p>
       </div>
 
@@ -106,22 +126,35 @@
         <div class="champ-page__table-wrapper">
           <div class="champ-page__table-head">
             <div class="champ-page__table-title display">
-              Leaderboard
+              {{ t('championPage.table.title') }}
               <span class="champ-page__table-count mono">
-                / {{ filteredSortedPlayers.length }} из {{ players.length }}
+                {{
+                  t('championPage.table.count', {
+                    filtered: filteredSortedPlayers.length,
+                    total: players.length,
+                  })
+                }}
               </span>
             </div>
             <div class="champ-page__table-actions">
-              <button class="champ-page__table-btn mono">EXPORT CSV</button>
-              <button class="champ-page__table-btn mono">⚡ LIVE</button>
+              <button class="champ-page__table-btn mono">
+                {{ t('championPage.table.exportCsv') }}
+              </button>
+              <button class="champ-page__table-btn mono">
+                {{ t('championPage.table.live') }}
+              </button>
             </div>
           </div>
           <table class="champ-page__table">
             <thead>
               <tr>
                 <th class="champ-page__th champ-page__th--rank">#</th>
-                <th class="champ-page__th">Игрок</th>
-                <th class="champ-page__th champ-page__th--center">Регион</th>
+                <th class="champ-page__th">
+                  {{ t('championPage.table.th.player') }}
+                </th>
+                <th class="champ-page__th champ-page__th--center">
+                  {{ t('championPage.table.th.region') }}
+                </th>
                 <th
                   class="champ-page__th champ-page__th--rank-col champ-page__th--sortable"
                   :class="{
@@ -129,39 +162,44 @@
                   }"
                   @click="toggleSort('lp')"
                 >
-                  Ранг{{ sortIndicator('lp') }}
+                  {{ t('championPage.table.th.rank') }}{{ sortIndicator('lp') }}
                 </th>
                 <th
                   class="champ-page__th champ-page__th--games champ-page__th--sortable"
                   :class="{
                     'champ-page__th--active': sortKey === 'championGames',
                   }"
-                  title="Игры на чемпе за 60 дней"
+                  :title="t('championPage.table.th.gamesTitle')"
                   @click="toggleSort('championGames')"
                 >
-                  Игры{{ sortIndicator('championGames') }}
+                  {{ t('championPage.table.th.games')
+                  }}{{ sortIndicator('championGames') }}
                 </th>
                 <th
                   class="champ-page__th champ-page__th--wr champ-page__th--sortable"
                   :class="{
                     'champ-page__th--active': sortKey === 'championWinRate',
                   }"
-                  title="Винрейт на чемпе за 60 дней"
+                  :title="t('championPage.table.th.wrTitle')"
                   @click="toggleSort('championWinRate')"
                 >
-                  WR{{ sortIndicator('championWinRate') }}
+                  {{ t('championPage.table.th.wr')
+                  }}{{ sortIndicator('championWinRate') }}
                 </th>
                 <th
                   class="champ-page__th champ-page__th--share champ-page__th--sortable"
                   :class="{
                     'champ-page__th--active': sortKey === 'championShare',
                   }"
-                  title="Доля игр на чемпе от общего пула"
+                  :title="t('championPage.table.th.poolTitle')"
                   @click="toggleSort('championShare')"
                 >
-                  Пул{{ sortIndicator('championShare') }}
+                  {{ t('championPage.table.th.pool')
+                  }}{{ sortIndicator('championShare') }}
                 </th>
-                <th class="champ-page__th champ-page__th--quality">Тип</th>
+                <th class="champ-page__th champ-page__th--quality">
+                  {{ t('championPage.table.th.kind') }}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -204,7 +242,7 @@
                         {{ formatTier(player.tier) }}
                       </span>
                       <span class="champ-page__tier-lp">
-                        {{ player.lp.toLocaleString('ru-RU') }} LP
+                        {{ player.lp.toLocaleString(locale) }} LP
                       </span>
                     </div>
                   </div>
@@ -217,11 +255,13 @@
                     </span>
                     <span class="champ-page__games-wl">
                       <span class="champ-page__games-w">
-                        {{ player.championWins }}В
+                        {{ player.championWins
+                        }}{{ t('championPage.winsLetter') }}
                       </span>
                       <span class="champ-page__games-sep">·</span>
                       <span class="champ-page__games-l">
-                        {{ player.championLosses }}П
+                        {{ player.championLosses
+                        }}{{ t('championPage.lossesLetter') }}
                       </span>
                     </span>
                   </div>
@@ -247,7 +287,7 @@
                     :class="`champ-page__quality--${player.quality}`"
                     :title="qualityTooltip(player.quality)"
                   >
-                    {{ QUALITY_LABEL[player.quality] }}
+                    {{ qualityLabel(player.quality) }}
                   </span>
                 </td>
               </tr>
@@ -261,10 +301,17 @@
         class="champ-page__empty"
       >
         <p>
-          Не найдено OTP игроков на
-          {{ champion?.name ?? championId }}.
+          {{
+            t('championPage.emptyNoPlayers', {
+              champion: champion
+                ? championDisplayName(champion, locale)
+                : championId,
+            })
+          }}
         </p>
-        <p class="champ-page__empty-hint">Попробуй другой регион.</p>
+        <p class="champ-page__empty-hint">
+          {{ t('championPage.emptyTryRegion') }}
+        </p>
       </div>
 
       <div
@@ -276,9 +323,9 @@
         "
         class="champ-page__empty"
       >
-        <p>Нет игроков с этой ролью в выборке.</p>
+        <p>{{ t('championPage.emptyNoRole') }}</p>
         <p class="champ-page__empty-hint">
-          Попробуй выбрать «Все» или другой лайн.
+          {{ t('championPage.emptyTryRole') }}
         </p>
       </div>
     </div>
@@ -293,9 +340,12 @@ import {
   ROLES,
 } from '~/src/shared/config'
 import type { RegionCode, RoleId } from '~/src/shared/config'
-import { CHAMPIONS } from '~/src/entities/champion'
+import { CHAMPIONS, championDisplayName } from '~/src/entities/champion'
 import { api, ApiError } from '~/src/shared/api'
 import type { ChampionPlayerGlobal, PlayerQuality } from '~/src/shared/api'
+import { useI18n } from '#imports'
+
+const { t, locale } = useI18n()
 
 // Sort keys map 1:1 onto ChampionPlayerGlobal numeric fields, so we can
 // index into the record without a switch statement.
@@ -303,8 +353,7 @@ type SortKey = 'lp' | 'championWinRate' | 'championGames' | 'championShare'
 type SortDir = 'asc' | 'desc'
 
 interface RegionGroup {
-  id: string
-  name: string
+  id: 'major' | 'europe' | 'asia' | 'americas'
   regions: RegionCode[]
 }
 
@@ -313,32 +362,14 @@ interface RegionGroup {
 // non-tracked regions (eune/tr/ru/jp/br/lan/las/oce) will correctly
 // render as empty until backend coverage expands.
 const regionGroups: RegionGroup[] = [
-  { id: 'major', name: 'Major', regions: ['kr', 'euw', 'na'] },
-  {
-    id: 'europe',
-    name: 'Europe',
-    regions: ['euw', 'eune', 'tr', 'ru'],
-  },
-  { id: 'asia', name: 'Asia', regions: ['kr', 'jp'] },
-  {
-    id: 'americas',
-    name: 'Americas',
-    regions: ['na', 'br', 'lan', 'las', 'oce'],
-  },
+  { id: 'major', regions: ['kr', 'euw', 'na'] },
+  { id: 'europe', regions: ['euw', 'eune', 'tr', 'ru'] },
+  { id: 'asia', regions: ['kr', 'jp'] },
+  { id: 'americas', regions: ['na', 'br', 'lan', 'las', 'oce'] },
 ]
 
-const QUALITY_LABEL: Record<PlayerQuality, string> = {
-  main: 'Main',
-  regular: 'Regular',
-  casual: 'Casual',
-  trial: 'Trial',
-}
-
-const QUALITY_TOOLTIP: Record<PlayerQuality, string> = {
-  main: '≥30 игр в ranked solo за 60 дней, ≥20% пула, WR > 50%',
-  regular: '≥10 игр, ≥10% пула, WR > 50%',
-  casual: '≥5 игр на чемпе (любая доля и WR)',
-  trial: '2–4 игры на чемпе — фолбэк для редких пиков',
+function qualityLabel(q: PlayerQuality): string {
+  return t(`championPage.quality.${q}`)
 }
 
 const router = useRouter()
@@ -350,9 +381,12 @@ const champion = CHAMPIONS.find(
 )
 
 useHead({
-  title: champion
-    ? `${champion.name} — One Trick Ranking | LoL Tricks`
-    : `${championId} — One Trick Ranking | LoL Tricks`,
+  title: computed(() => {
+    const name = champion
+      ? championDisplayName(champion, locale.value)
+      : championId
+    return `${name} — One Trick Ranking | ${t('app.name')}`
+  }),
 })
 
 const selectedGroup = ref('major')
@@ -373,12 +407,12 @@ const currentRegions = computed(() => {
 const errorMessage = computed(() => {
   if (!error.value) return ''
   if (error.value.includes('429')) {
-    return 'Превышен лимит запросов. Подожди немного и попробуй снова.'
+    return t('errors.rateLimited')
   }
   if (error.value.includes('504') || error.value.includes('timeout')) {
-    return 'Сервер не успел ответить. Попробуй ещё раз.'
+    return t('errors.timeout')
   }
-  return `Ошибка: ${error.value}`
+  return t('common.error', { message: error.value })
 })
 
 const qualityMixLabel = computed<string>(() => {
@@ -387,7 +421,7 @@ const qualityMixLabel = computed<string>(() => {
   const order: PlayerQuality[] = ['main', 'regular', 'casual', 'trial']
   for (const q of order) {
     const n = mix[q] ?? 0
-    if (n > 0) parts.push(`${QUALITY_LABEL[q]} ${n}`)
+    if (n > 0) parts.push(`${qualityLabel(q)} ${n}`)
   }
   return parts.join(' · ')
 })
@@ -453,7 +487,7 @@ function primaryRole(
 }
 
 function qualityTooltip(q: PlayerQuality): string {
-  return QUALITY_TOOLTIP[q]
+  return t(`championPage.quality.${q}Tip`)
 }
 
 const heroStats = computed<{ avgWr: number; avgGames: number } | null>(() => {
@@ -524,7 +558,7 @@ async function loadPlayers(): Promise<void> {
         ? e.message
         : e instanceof Error
           ? e.message
-          : 'Unknown error'
+          : t('common.unknownError')
   } finally {
     loading.value = false
   }

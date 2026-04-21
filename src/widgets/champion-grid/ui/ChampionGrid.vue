@@ -1,14 +1,15 @@
 <template>
   <section class="champion-grid">
     <div class="champion-grid__header">
-      <h2 class="champion-grid__title">Чемпионы</h2>
-      <p class="champion-grid__subtitle">
-        Выбери чемпиона, чтобы увидеть билды от лучших OTP
-      </p>
+      <h2 class="champion-grid__title">{{ t('championGrid.title') }}</h2>
+      <p class="champion-grid__subtitle">{{ t('championGrid.subtitle') }}</p>
     </div>
 
     <div class="champion-grid__controls">
-      <SearchInput v-model="searchQuery" placeholder="Поиск чемпиона..." />
+      <SearchInput
+        v-model="searchQuery"
+        :placeholder="t('searchInput.placeholder')"
+      />
       <RoleFilter v-model="selectedRole" />
     </div>
 
@@ -21,7 +22,7 @@
     </div>
 
     <div v-else class="champion-grid__empty">
-      <p>Чемпионы не найдены</p>
+      <p>{{ t('championGrid.empty') }}</p>
     </div>
   </section>
 </template>
@@ -30,17 +31,28 @@
 import { ref, computed } from 'vue'
 import { SearchInput, RoleFilter } from '~/src/shared/ui'
 import type { RoleId } from '~/src/shared/config'
-import { CHAMPIONS, ChampionCard } from '~/src/entities/champion'
+import {
+  CHAMPIONS,
+  ChampionCard,
+  championDisplayName,
+} from '~/src/entities/champion'
+import { useI18n } from '#imports'
+
+const { t, locale } = useI18n()
 
 const searchQuery = ref('')
 const selectedRole = ref<RoleId>('all')
 
 const filteredChampions = computed(() => {
   return CHAMPIONS.filter((champion) => {
+    const q = searchQuery.value.toLowerCase()
     const matchesSearch =
-      searchQuery.value === '' ||
-      champion.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      champion.id.toLowerCase().includes(searchQuery.value.toLowerCase())
+      q === '' ||
+      champion.id.toLowerCase().includes(q) ||
+      championDisplayName(champion, locale.value).toLowerCase().includes(q) ||
+      // Keep searching the raw Russian field too so Russian speakers can
+      // still type partial Russian names when the UI is in English.
+      champion.name.toLowerCase().includes(q)
 
     const matchesRole =
       selectedRole.value === 'all' ||

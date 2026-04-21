@@ -3,24 +3,30 @@
     <div class="champion-card__image-wrapper">
       <img
         :src="getChampionImageUrl(champion.id)"
-        :alt="champion.name"
+        :alt="championDisplayName(champion, locale)"
         class="champion-card__image"
         loading="lazy"
       />
     </div>
     <div class="champion-card__info">
-      <span class="champion-card__name display">{{ champion.name }}</span>
+      <span class="champion-card__name display">
+        {{ championDisplayName(champion, locale) }}
+      </span>
     </div>
   </NuxtLink>
 </template>
 
 <script setup lang="ts">
 import type { ChampionData } from '~/src/entities/champion'
+import { championDisplayName } from '~/src/entities/champion'
 import { getChampionImageUrl } from '~/src/shared/config'
+import { useI18n } from '#imports'
 
 defineProps<{
   champion: ChampionData
 }>()
+
+const { locale } = useI18n()
 </script>
 
 <style scoped>

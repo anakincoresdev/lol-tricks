@@ -1,8 +1,8 @@
 <template>
   <section class="top-players">
     <div class="top-players__header">
-      <h2 class="top-players__title">Топ OTP игроков</h2>
-      <p class="top-players__subtitle">Лучшие ваншотеры с высших рангов</p>
+      <h2 class="top-players__title">{{ t('topPlayers.title') }}</h2>
+      <p class="top-players__subtitle">{{ t('topPlayers.subtitle') }}</p>
     </div>
 
     <div class="top-players__table-wrapper">
@@ -10,13 +10,17 @@
         <thead>
           <tr>
             <th class="top-players__th top-players__th--rank">#</th>
-            <th class="top-players__th">Игрок</th>
-            <th class="top-players__th">Чемпион</th>
-            <th class="top-players__th top-players__th--hide-mobile">Регион</th>
-            <th class="top-players__th">Ранг</th>
-            <th class="top-players__th">WR</th>
-            <th class="top-players__th top-players__th--hide-mobile">Игр</th>
-            <th class="top-players__th">OTP%</th>
+            <th class="top-players__th">{{ t('topPlayers.th.player') }}</th>
+            <th class="top-players__th">{{ t('topPlayers.th.champion') }}</th>
+            <th class="top-players__th top-players__th--hide-mobile">
+              {{ t('topPlayers.th.region') }}
+            </th>
+            <th class="top-players__th">{{ t('topPlayers.th.rank') }}</th>
+            <th class="top-players__th">{{ t('topPlayers.th.wr') }}</th>
+            <th class="top-players__th top-players__th--hide-mobile">
+              {{ t('topPlayers.th.games') }}
+            </th>
+            <th class="top-players__th">{{ t('topPlayers.th.otp') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -76,22 +80,24 @@
 
 <script setup lang="ts">
 import type { Player } from '~/src/entities/player'
-import { getChampionImageUrl, REGIONS } from '~/src/shared/config'
-import { CHAMPIONS } from '~/src/entities/champion'
+import { getChampionImageUrl } from '~/src/shared/config'
+import { CHAMPIONS, championDisplayName } from '~/src/entities/champion'
 import type { RegionCode } from '~/src/shared/config'
+import { useI18n } from '#imports'
 
 defineProps<{
   players: Player[]
 }>()
 
+const { t, locale } = useI18n()
+
 function getChampionName(championId: string): string {
   const champion = CHAMPIONS.find((c) => c.id === championId)
-  return champion ? champion.name : championId
+  return champion ? championDisplayName(champion, locale.value) : championId
 }
 
 function getRegionName(regionCode: RegionCode): string {
-  const region = REGIONS.find((r) => r.code === regionCode)
-  return region ? region.name : regionCode.toUpperCase()
+  return t(`regions.${regionCode}`)
 }
 
 function getRankClass(rank: string): string {

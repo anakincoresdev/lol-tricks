@@ -12,18 +12,17 @@
             <span>tricks</span>
           </span>
         </NuxtLink>
-        <span class="app-footer__copy mono">
-          © 2026 · НЕ АФФИЛИРОВАН С RIOT
-        </span>
+        <span class="app-footer__copy mono">{{ t('footer.copy') }}</span>
       </div>
-      <span class="app-footer__build mono">
-        build 2026.04 · задержка данных ~3мин · ★★★☆☆
-      </span>
+      <span class="app-footer__build mono">{{ t('footer.build') }}</span>
     </div>
   </footer>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useI18n } from '#imports'
+const { t } = useI18n()
+</script>
 
 <style scoped>
 .app-footer {

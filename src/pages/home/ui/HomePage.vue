@@ -14,31 +14,38 @@
 
     <section class="home-page__hero">
       <div class="home-page__hero-content">
-        <span class="home-page__live mono">ПАТЧ {{ patchShort }}</span>
+        <span class="home-page__live mono">
+          {{ t('home.patch', { patch: patchShort }) }}
+        </span>
 
         <h1 class="home-page__title display">
-          <span class="home-page__title-line">Билды</span>
           <span class="home-page__title-line">
-            <span class="glitch" data-text="OTP-мейнов">OTP-мейнов</span>
+            {{ t('home.titleLine1') }}
+          </span>
+          <span class="home-page__title-line">
+            <span class="glitch" :data-text="t('home.titleLine2')">
+              {{ t('home.titleLine2') }}
+            </span>
           </span>
           <span class="home-page__title-line home-page__title-line--accent">
-            по чемпионам.
+            {{ t('home.titleLine3') }}
           </span>
         </h1>
 
         <p class="home-page__subcopy">
-          Топ-100 игроков на каждого чемпиона со всех серверов — сортировка по
-          мастерству, играм и винрейту.
+          {{ t('home.subcopy') }}
         </p>
 
         <div class="home-page__search">
           <SearchAutocomplete />
         </div>
 
-        <p class="home-page__hint mono">// ПОИСК НА РУССКОМ ИЛИ АНГЛИЙСКОМ</p>
+        <p class="home-page__hint mono">{{ t('home.searchHint') }}</p>
 
         <div class="home-page__popular">
-          <span class="home-page__popular-label mono">// ЧАСТО СМОТРЯТ</span>
+          <span class="home-page__popular-label mono">
+            {{ t('home.popularLabel') }}
+          </span>
           <div class="home-page__popular-list">
             <NuxtLink
               v-for="(champ, i) in popularChampions"
@@ -49,12 +56,12 @@
             >
               <img
                 :src="getChampionImageUrl(champ.id)"
-                :alt="champ.name"
+                :alt="championDisplayName(champ, locale)"
                 class="home-page__popular-icon"
                 loading="lazy"
               />
               <span class="display home-page__popular-name">
-                {{ champ.name }}
+                {{ championDisplayName(champ, locale) }}
               </span>
             </NuxtLink>
           </div>
@@ -68,63 +75,88 @@
 
     <section class="home-page__stats">
       <div class="home-page__stat stick home-page__stat--tilt-1">
-        <span class="mono home-page__stat-kicker">ИГРОКОВ В БАЗЕ</span>
+        <span class="mono home-page__stat-kicker">
+          {{ t('home.stats.players') }}
+        </span>
         <span class="big-num home-page__stat-num home-page__stat-num--acid">
           1.2M
         </span>
-        <span class="home-page__stat-label">со всех серверов</span>
+        <span class="home-page__stat-label">
+          {{ t('home.stats.playersLabel') }}
+        </span>
       </div>
       <div class="home-page__stat stick home-page__stat--tilt-2">
-        <span class="mono home-page__stat-kicker">СЕРВЕРОВ</span>
+        <span class="mono home-page__stat-kicker">
+          {{ t('home.stats.servers') }}
+        </span>
         <span class="big-num home-page__stat-num home-page__stat-num--cyan">
           12
         </span>
-        <span class="home-page__stat-label">от NA до KR</span>
+        <span class="home-page__stat-label">
+          {{ t('home.stats.serversLabel') }}
+        </span>
       </div>
       <div class="home-page__stat stick home-page__stat--tilt-3">
-        <span class="mono home-page__stat-kicker">ЧЕМПИОНОВ</span>
+        <span class="mono home-page__stat-kicker">
+          {{ t('home.stats.champions') }}
+        </span>
         <span class="big-num home-page__stat-num home-page__stat-num--mag">
           168
         </span>
-        <span class="home-page__stat-label">в индексе</span>
+        <span class="home-page__stat-label">
+          {{ t('home.stats.championsLabel') }}
+        </span>
       </div>
       <div class="home-page__stat stick home-page__stat--tilt-1">
-        <span class="mono home-page__stat-kicker">АПДЕЙТ</span>
-        <span class="big-num home-page__stat-num home-page__stat-num--acid">
-          3м
+        <span class="mono home-page__stat-kicker">
+          {{ t('home.stats.update') }}
         </span>
-        <span class="home-page__stat-label">между обновлениями</span>
+        <span class="big-num home-page__stat-num home-page__stat-num--acid">
+          3m
+        </span>
+        <span class="home-page__stat-label">
+          {{ t('home.stats.updateLabel') }}
+        </span>
       </div>
     </section>
 
     <section class="home-page__how">
       <h2 class="home-page__how-title display">
-        Как устроен индекс
+        {{ t('home.how.title') }}
         <span class="home-page__how-dot">.</span>
       </h2>
       <div class="home-page__how-cards">
         <div class="home-page__how-card stick">
-          <span class="mono home-page__how-step">01 · ПОИСК</span>
-          <span class="display home-page__how-card-title">По чемпиону</span>
+          <span class="mono home-page__how-step">
+            {{ t('home.how.step1Kicker') }}
+          </span>
+          <span class="display home-page__how-card-title">
+            {{ t('home.how.step1Title') }}
+          </span>
           <p class="home-page__how-card-body">
-            В список попадают ранкед-игроки, у которых чемпион — в основном
-            пуле.
+            {{ t('home.how.step1Body') }}
           </p>
         </div>
         <div class="home-page__how-card stick">
-          <span class="mono home-page__how-step">02 · РАНЖИРОВАНИЕ</span>
-          <span class="display home-page__how-card-title">Глобальный топ</span>
+          <span class="mono home-page__how-step">
+            {{ t('home.how.step2Kicker') }}
+          </span>
+          <span class="display home-page__how-card-title">
+            {{ t('home.how.step2Title') }}
+          </span>
           <p class="home-page__how-card-body">
-            Топ-100 считается по мастерству, недавним играм и весу LP — без
-            фильтра по региону.
+            {{ t('home.how.step2Body') }}
           </p>
         </div>
         <div class="home-page__how-card stick">
-          <span class="mono home-page__how-step">03 · ДЕТАЛИ</span>
-          <span class="display home-page__how-card-title">По игроку</span>
+          <span class="mono home-page__how-step">
+            {{ t('home.how.step3Kicker') }}
+          </span>
+          <span class="display home-page__how-card-title">
+            {{ t('home.how.step3Title') }}
+          </span>
           <p class="home-page__how-card-body">
-            Клик по строке открывает порядок предметов, руны, винрейты в
-            матчапах и стрики.
+            {{ t('home.how.step3Body') }}
           </p>
         </div>
       </div>
@@ -133,16 +165,16 @@
 </template>
 
 <script setup lang="ts">
-import {
-  APP_NAME,
-  DDRAGON_VERSION,
-  getChampionImageUrl,
-} from '~/src/shared/config'
-import { CHAMPIONS } from '~/src/entities/champion'
+import { computed } from 'vue'
+import { DDRAGON_VERSION, getChampionImageUrl } from '~/src/shared/config'
+import { CHAMPIONS, championDisplayName } from '~/src/entities/champion'
 import { SearchAutocomplete } from '~/src/widgets/search-autocomplete'
+import { useI18n } from '#imports'
+
+const { t, locale } = useI18n()
 
 useHead({
-  title: `${APP_NAME} — Билды OTP игроков League of Legends`,
+  title: t('app.htmlTitle'),
 })
 
 const popularIds = [
@@ -183,17 +215,19 @@ const patchShort = computed<string>(() => {
   return `${gameMajor}.${minor ?? '0'}`
 })
 
-const marqueeItems = [
-  'патч 26.08',
-  '168 чемпионов',
-  '12 серверов',
-  'NA · EUW · EUNE · KR',
-  'BR · JP · LAN · LAS',
-  'OCE · TR · RU · VN',
-  'обновление каждые 3 минуты',
-  'данные из riot api',
-]
-const marqueeText = [...marqueeItems, ...marqueeItems].join('  ✦  ')
+const marqueeText = computed(() => {
+  const items = [
+    t('home.marquee.patch'),
+    t('home.marquee.champions'),
+    t('home.marquee.servers'),
+    t('home.marquee.serversRow1'),
+    t('home.marquee.serversRow2'),
+    t('home.marquee.serversRow3'),
+    t('home.marquee.updates'),
+    t('home.marquee.source'),
+  ]
+  return [...items, ...items].join('  ✦  ')
+})
 </script>
 
 <style scoped>

@@ -1,7 +1,10 @@
 export const APP_NAME = 'LoL Tricks'
 
+// App description is resolved via i18n (`t('app.description')`). This
+// constant is kept only as a fallback for places that can't use a
+// composable (e.g. static metadata at module scope).
 export const APP_DESCRIPTION =
-  'Билды, руны и предметы от лучших OTP игроков League of Legends'
+  'Builds, runes and items from the best OTP players in League of Legends'
 
 export { REGIONS } from './regions'
 export type { RegionCode } from './regions'

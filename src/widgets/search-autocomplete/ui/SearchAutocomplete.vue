@@ -1,13 +1,15 @@
 <template>
   <div ref="wrapperRef" class="search-ac">
     <div class="search-ac__bar">
-      <span class="search-ac__label mono">ЧЕМПИОН</span>
+      <span class="search-ac__label mono">
+        {{ t('searchAutocomplete.championLabel') }}
+      </span>
       <input
         ref="inputRef"
         v-model="query"
         type="text"
         class="search-ac__input"
-        placeholder="Джинкс, Ясуо, Ahri…"
+        :placeholder="t('searchAutocomplete.placeholder')"
         autocomplete="off"
         @focus="onFocus"
         @keydown.down.prevent="moveDown"
@@ -16,15 +18,17 @@
         @keydown.escape="close"
       />
       <button class="search-ac__submit mono" @click="selectCurrent">
-        ПОИСК
+        {{ t('searchAutocomplete.submit') }}
         <span class="search-ac__submit-arrow">→</span>
       </button>
     </div>
 
     <div v-if="showDropdown && filtered.length > 0" class="search-ac__dropdown">
       <div class="search-ac__dropdown-head mono">
-        <span>РЕЗУЛЬТАТЫ · {{ filtered.length }}</span>
-        <span>↵ ENTER для перехода</span>
+        <span>
+          {{ t('searchAutocomplete.resultsCount', { count: filtered.length }) }}
+        </span>
+        <span>{{ t('searchAutocomplete.enterHint') }}</span>
       </div>
       <button
         v-for="(champ, i) in filtered"
@@ -36,12 +40,14 @@
       >
         <img
           :src="getChampionImageUrl(champ.id)"
-          :alt="champ.name"
+          :alt="championDisplayName(champ, locale)"
           class="search-ac__item-icon"
           loading="lazy"
         />
         <div class="search-ac__item-info">
-          <span class="search-ac__item-name display">{{ champ.name }}</span>
+          <span class="search-ac__item-name display">
+            {{ championDisplayName(champ, locale) }}
+          </span>
           <span class="search-ac__item-id mono">
             {{ champ.roles.join(' · ').toUpperCase() }}
           </span>
@@ -54,7 +60,7 @@
       v-if="showDropdown && query.length >= 1 && filtered.length === 0"
       class="search-ac__dropdown search-ac__dropdown--empty"
     >
-      <p>Ничего не найдено</p>
+      <p>{{ t('common.nothingFound') }}</p>
     </div>
   </div>
 </template>
@@ -62,10 +68,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { getChampionImageUrl } from '~/src/shared/config'
-import { CHAMPIONS } from '~/src/entities/champion'
+import { CHAMPIONS, championDisplayName } from '~/src/entities/champion'
 import type { ChampionData } from '~/src/entities/champion'
+import { useI18n } from '#imports'
 
 const router = useRouter()
+const { t, locale } = useI18n()
 
 const query = ref('')
 const showDropdown = ref(false)
@@ -83,7 +91,8 @@ const filtered = computed(() => {
     return (
       c.name.toLowerCase().includes(q) ||
       c.id.toLowerCase().includes(q) ||
-      c.title.toLowerCase().includes(q)
+      c.title.toLowerCase().includes(q) ||
+      championDisplayName(c, 'en').toLowerCase().includes(q)
     )
   }).slice(0, 8)
 })

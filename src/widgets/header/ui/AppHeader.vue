@@ -10,33 +10,82 @@
           <span class="app-header__logo-dot">·</span>
           <span>tricks</span>
         </span>
-        <span class="app-header__kicker mono">// ONE-TRICK INDEX v2.4</span>
+        <span class="app-header__kicker mono">{{ t('header.kicker') }}</span>
       </NuxtLink>
 
       <nav class="app-header__nav">
-        <NuxtLink to="/" class="app-header__link mono">Поиск</NuxtLink>
+        <NuxtLink to="/" class="app-header__link mono">
+          {{ t('header.nav.search') }}
+        </NuxtLink>
         <a href="#" class="app-header__link mono app-header__link--ghost">
-          Топы
+          {{ t('header.nav.tops') }}
         </a>
         <a
           href="#"
           class="app-header__link mono app-header__link--ghost app-header__link--hide-mobile"
         >
-          Билды
+          {{ t('header.nav.builds') }}
         </a>
         <a
           href="#"
           class="app-header__link mono app-header__link--ghost app-header__link--hide-mobile"
         >
-          Мета
+          {{ t('header.nav.meta') }}
         </a>
-        <button class="app-header__signin mono">ВОЙТИ</button>
+
+        <div
+          class="app-header__lang"
+          role="group"
+          :aria-label="t('langSwitch.label')"
+        >
+          <button
+            v-for="loc in availableLocales"
+            :key="loc.code"
+            class="app-header__lang-btn mono"
+            :class="{
+              'app-header__lang-btn--active': locale === loc.code,
+            }"
+            :aria-pressed="locale === loc.code"
+            @click="switchLocale(loc.code)"
+          >
+            {{ loc.code.toUpperCase() }}
+          </button>
+        </div>
+
+        <button class="app-header__signin mono">
+          {{ t('header.signIn') }}
+        </button>
       </nav>
     </div>
   </header>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n, useSwitchLocalePath } from '#imports'
+
+const { t, locale, locales, setLocale } = useI18n()
+const switchLocalePath = useSwitchLocalePath()
+
+interface NamedLocale {
+  code: string
+  name?: string
+}
+
+const availableLocales = computed<NamedLocale[]>(() => {
+  const list = locales.value as unknown as NamedLocale[]
+  return list.map((l) => ({ code: l.code, name: l.name }))
+})
+
+async function switchLocale(code: string): Promise<void> {
+  // `setLocale` persists the choice via the i18n cookie and keeps
+  // SSR + client in sync without a full page reload. `switchLocalePath`
+  // is only needed for prefixed strategies; we use `no_prefix`, so a
+  // direct `setLocale` is enough.
+  void switchLocalePath
+  await setLocale(code as 'en' | 'ru')
+}
+</script>
 
 <style scoped>
 .app-header {
@@ -134,6 +183,41 @@
 .app-header__link.router-link-exact-active {
   color: var(--fg);
   border-bottom-color: var(--acid);
+}
+
+.app-header__lang {
+  display: inline-flex;
+  margin-left: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.app-header__lang-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--fg-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.app-header__lang-btn + .app-header__lang-btn {
+  border-left: 1px solid var(--border);
+}
+
+.app-header__lang-btn:hover {
+  color: var(--fg);
+}
+
+.app-header__lang-btn--active {
+  background: var(--acid);
+  color: var(--bg);
 }
 
 .app-header__signin {

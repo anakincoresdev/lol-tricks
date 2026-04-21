@@ -1,2 +1,2 @@
-/* shared/lib/index.ts — реэкспорт утилит */
+/* shared/lib/index.ts — utility re-exports */
 export {}

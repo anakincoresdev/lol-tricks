@@ -1,15 +1,19 @@
+// Region codes are language-independent; display names are resolved
+// through i18n via `t('regions.' + code)`. The `RegionCode` union is
+// derived from this list so TypeScript flags any unknown code.
+
 export const REGIONS = [
-  { code: 'ru', name: 'Россия' },
-  { code: 'euw', name: 'Европа Запад' },
-  { code: 'eune', name: 'Европа Север и Восток' },
-  { code: 'na', name: 'Северная Америка' },
-  { code: 'kr', name: 'Корея' },
-  { code: 'br', name: 'Бразилия' },
-  { code: 'tr', name: 'Турция' },
-  { code: 'lan', name: 'Латинская Америка Север' },
-  { code: 'las', name: 'Латинская Америка Юг' },
-  { code: 'oce', name: 'Океания' },
-  { code: 'jp', name: 'Япония' },
+  { code: 'ru' },
+  { code: 'euw' },
+  { code: 'eune' },
+  { code: 'na' },
+  { code: 'kr' },
+  { code: 'br' },
+  { code: 'tr' },
+  { code: 'lan' },
+  { code: 'las' },
+  { code: 'oce' },
+  { code: 'jp' },
 ] as const
 
 export type RegionCode = (typeof REGIONS)[number]['code']

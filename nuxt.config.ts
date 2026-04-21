@@ -2,17 +2,39 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-11-01',
   devtools: { enabled: true },
 
-  modules: ['@nuxt/eslint'],
+  modules: ['@nuxt/eslint', '@nuxtjs/i18n'],
 
   typescript: {
     strict: true,
   },
 
+  // `@nuxtjs/i18n` reads locale files via `langDir`. We keep locales as
+  // typed TS modules (not JSON) because they double as the source of
+  // truth for vue-i18n's key typing via `src/shared/i18n/vue-i18n.d.ts`.
+  i18n: {
+    strategy: 'no_prefix',
+    defaultLocale: 'en',
+    langDir: 'src/shared/i18n/locales/',
+    locales: [
+      { code: 'en', language: 'en-US', file: 'en.ts', name: 'English' },
+      { code: 'ru', language: 'ru-RU', file: 'ru.ts', name: 'Русский' },
+    ],
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'i18n_redirected',
+      alwaysRedirect: false,
+      fallbackLocale: 'en',
+    },
+    bundle: {
+      optimizeTranslationDirective: false,
+    },
+  },
+
   app: {
     head: {
-      title: 'LoL Tricks — Билды OTP игроков League of Legends',
+      title: 'LoL Tricks — Builds from League of Legends OTP players',
       htmlAttrs: {
-        lang: 'ru',
+        lang: 'en',
       },
       meta: [
         { charset: 'utf-8' },
@@ -20,7 +42,7 @@ export default defineNuxtConfig({
         {
           name: 'description',
           content:
-            'Билды, руны и предметы от лучших OTP игроков League of Legends',
+            'Builds, runes and items from the best OTP players in League of Legends',
         },
       ],
       link: [

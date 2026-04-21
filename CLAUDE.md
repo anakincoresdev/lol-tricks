@@ -17,7 +17,7 @@ CI runs `lint` → `format:check` → `build` sequentially on push/PR to `master
 
 ## Architecture
 
-Nuxt 3 app using **Feature-Sliced Design (FSD)** with all application code in `src/`. The language is Russian throughout the UI.
+Nuxt 3 app using **Feature-Sliced Design (FSD)** with all application code in `src/`. UI is bilingual — English (default) + Russian — via `@nuxtjs/i18n` with typed TS locale files.
 
 ### FSD Layers (in `src/`)
 
@@ -25,8 +25,18 @@ Nuxt 3 app using **Feature-Sliced Design (FSD)** with all application code in `s
 - **pages/** — Page-level Vue components (HomePage, ChampionPage). Each has `index.ts` + `ui/PageName.vue`
 - **widgets/** — Self-contained UI blocks (header, search-autocomplete, champion-grid, otp-leaderboard, top-players). Each has `index.ts` + `ui/ComponentName.vue`
 - **features/** — Feature modules (currently empty, ready for use)
-- **entities/** — Domain models: champion (data + card), player (model + mocks), build (interfaces)
-- **shared/** — Reusable code: `api/` (Riot API composables/types), `config/` (regions, roles, DDragon URLs), `ui/` (SearchInput, RoleFilter)
+- **entities/** — Domain models: champion (data + card + `championDisplayName` helper), player (model + mocks), build (interfaces)
+- **shared/** — Reusable code: `api/` (Riot API composables/types), `config/` (regions, roles, DDragon URLs), `ui/` (SearchInput, RoleFilter), `i18n/` (typed locale messages)
+
+### Internationalisation (i18n)
+
+`@nuxtjs/i18n` is configured in `nuxt.config.ts` with two locales: `en` (default) and `ru`. Strategy is `no_prefix` with cookie-based persistence (`i18n_redirected`). Locale switcher lives in the header.
+
+**Locale files are TypeScript, not JSON** — `src/shared/i18n/locales/en.ts` is the single source of truth; the `Messages` type is `typeof en`, and `ru.ts` is annotated `: Messages` so missing keys fail the TS build. `src/shared/i18n/vue-i18n.d.ts` augments `DefineLocaleMessage` so `t()` calls get autocomplete and key validation in every `.vue` file.
+
+Champion display names are resolved at the call site via `championDisplayName(champion, locale)` (in `src/entities/champion/lib/champion-name.ts`): for `ru` it returns the Russian `champion.name` from `champions-data.ts`; for `en` it formats the PascalCase id via a small overrides map (Kai'Sa, Kha'Zix, Jarvan IV, Cho'Gath, etc.). Region and role display names live only in locale files under `regions.*` and `roles.*`.
+
+When adding UI strings: add the key to `en.ts` first, mirror it in `ru.ts`, then reference it with `{{ t('…') }}` in templates or `t('…')` in scripts.
 
 ### Two-Tier Routing
 

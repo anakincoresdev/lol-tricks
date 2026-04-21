@@ -1,2 +1,2 @@
-/* shared/types/index.ts — глобальные типы */
+/* shared/types/index.ts — global types */
 export {}

@@ -1,4 +1,4 @@
-/* entities/build/model — типы билдов */
+/* entities/build/model — build types */
 
 export interface BuildRunes {
   primary: string[]
