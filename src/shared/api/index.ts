@@ -1,4 +1,5 @@
 export { buildApiUrl } from './riot'
+export { api, ApiError } from './client'
 
 export type {
   LeaguePlayer,
@@ -10,6 +11,9 @@ export type {
   ChampionPlayer,
   ChampionPlayersResponse,
   ChampionPlayersMultiResponse,
+  ChampionPlayerGlobal,
+  ChampionPlayersGlobalResponse,
+  PlayerQuality,
   PlayerChampionMatch,
   PlayerChampionMatchesResponse,
 } from './riot'

@@ -158,8 +158,9 @@ const popularIds = [
 const popularChampions = CHAMPIONS.filter((c) => popularIds.includes(c.id))
 
 // DDragon exposes the full list of LoL client versions (newest first).
-// Fetch it during SSR, display the major.minor of the first entry.
-// Fall back to the pinned DDRAGON_VERSION if the CDN is unreachable.
+// Fetch it during SSR, translate the season-based major to Riot's
+// year-based patch label, and fall back to the pinned DDRAGON_VERSION
+// if the CDN is unreachable.
 const { data: ddragonVersions } = await useFetch<string[]>(
   'https://ddragon.leagueoflegends.com/api/versions.json',
   {
@@ -169,9 +170,17 @@ const { data: ddragonVersions } = await useFetch<string[]>(
   },
 )
 
+// Riot marketed patch numbers count from the calendar year (e.g. 26.8 =
+// year 2026, patch 8) while DDragon keeps season-based numbering that
+// started at season 1 in 2011. The two differ by a constant +10 offset
+// on the major component, so 16.8 on DDragon is 26.8 in patch notes.
+const DDRAGON_TO_GAME_MAJOR_OFFSET = 10
+
 const patchShort = computed<string>(() => {
   const latest = ddragonVersions.value?.[0] ?? DDRAGON_VERSION
-  return latest.split('.').slice(0, 2).join('.')
+  const [major, minor] = latest.split('.')
+  const gameMajor = Number(major) + DDRAGON_TO_GAME_MAJOR_OFFSET
+  return `${gameMajor}.${minor ?? '0'}`
 })
 
 const marqueeItems = [

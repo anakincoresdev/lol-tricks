@@ -39,7 +39,11 @@ pages/champion/[id].vue → imports src/pages/champion/ui/ChampionPage.vue
 
 ### External API backend
 
-All Riot Games API calls go through the external **lol-tricks-api** backend — this app never holds `RIOT_API_KEY`. The URL of the backend is read from `runtimeConfig.public.apiBase` (env `NUXT_PUBLIC_API_BASE`, default `http://localhost:3001` for dev — Nuxt dev itself runs on `3000`, so the backend must listen on a different port; `lol-tricks-api/.env` uses `PORT=3001`). Use the `buildApiUrl('/api/riot/...')` helper from `src/shared/api` to compose full URLs inside `$fetch`/`useFetch` calls.
+All Riot Games API calls go through the external **lol-tricks-api** backend — this app never holds `RIOT_API_KEY`. The URL is read from `runtimeConfig.public.apiBase` (env `NUXT_PUBLIC_API_BASE`, prod default `https://lol-tricks-api.vercel.app`; local dev expects `http://localhost:3001` — Nuxt dev runs on `3000`, backend on `3001`).
+
+Prefer the typed `api` facade from `src/shared/api/client.ts` (`api.championPlayers.global`, `api.otp.list`, `api.playerMatches.get`, …) over raw `$fetch`. The facade centralises timeout, a single retry on 5xx/network failures, and normalised `ApiError`. `buildApiUrl()` is still exported for one-off cases and throws if `apiBase` is empty.
+
+The champion page uses `GET /api/riot/champion-players/global?champion=X&limit=100` — backend returns top-100 Master+ players across all tracked regions (currently EUW/NA/KR) with `qualityMix` (main/regular/casual/trial) and per-champion stats (`championGames`, `championWinRate`, `championShare`, `roles`). Region and role tabs filter the response client-side — switching tabs does not refetch.
 
 ## Code Style
 

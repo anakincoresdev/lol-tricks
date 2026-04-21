@@ -107,7 +107,7 @@
 import { ref, computed } from 'vue'
 import { REGIONS, getChampionImageUrl } from '~/src/shared/config'
 import type { RegionCode } from '~/src/shared/config'
-import { buildApiUrl } from '~/src/shared/api'
+import { api, ApiError } from '~/src/shared/api'
 import type { OtpResponse } from '~/src/shared/api'
 
 const selectedRegion = ref<RegionCode>('euw')
@@ -134,17 +134,14 @@ async function load(): Promise<void> {
   error.value = null
 
   try {
-    const response = await $fetch<OtpResponse>(buildApiUrl('/api/riot/otp'), {
-      query: {
-        region: selectedRegion.value,
-        tier: selectedTier.value,
-        limit: 5,
-      },
-    })
-    data.value = response
+    data.value = await api.otp.list(selectedRegion.value, selectedTier.value, 5)
   } catch (e: unknown) {
-    const err = e as { statusMessage?: string; message?: string }
-    error.value = err.statusMessage ?? err.message ?? 'Unknown error'
+    error.value =
+      e instanceof ApiError
+        ? e.message
+        : e instanceof Error
+          ? e.message
+          : 'Unknown error'
   } finally {
     loading.value = false
   }

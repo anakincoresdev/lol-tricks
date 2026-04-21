@@ -136,7 +136,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { getChampionImageUrl, getItemImageUrl } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
-import { buildApiUrl } from '~/src/shared/api'
+import { api, ApiError } from '~/src/shared/api'
 import type { PlayerChampionMatchesResponse } from '~/src/shared/api'
 
 const route = useRoute()
@@ -221,31 +221,14 @@ async function loadMatches(): Promise<void> {
   error.value = null
 
   try {
-    const response = await $fetch<PlayerChampionMatchesResponse>(
-      buildApiUrl('/api/riot/player-champion-matches'),
-      {
-        query: {
-          puuid,
-          champion: championId,
-          region,
-        },
-        timeout: 30000,
-      },
-    )
-    data.value = response
+    data.value = await api.playerMatches.get(puuid, championId, region)
   } catch (e: unknown) {
-    const err = e as {
-      data?: { statusMessage?: string; message?: string }
-      statusMessage?: string
-      message?: string
-      status?: number
-    }
     error.value =
-      err.data?.statusMessage ??
-      err.data?.message ??
-      err.statusMessage ??
-      err.message ??
-      'Unknown error'
+      e instanceof ApiError
+        ? e.message
+        : e instanceof Error
+          ? e.message
+          : 'Unknown error'
   } finally {
     loading.value = false
   }

@@ -15,14 +15,16 @@
           </span>
           <h1 class="champ-page__title display">{{ champion.name }}</h1>
           <div class="champ-page__chips">
-            <span class="chip chip--acid">ТОП-100 · ГЛОБАЛЬНО</span>
+            <span class="chip chip--acid">ТОП-100 · ГЛОБАЛЬНО · 60Д</span>
             <span v-if="heroStats" class="chip">
-              СРЕД. WR {{ heroStats.avgWr }}%
+              СРЕД. WR НА ЧЕМПЕ {{ heroStats.avgWr }}%
             </span>
             <span v-if="heroStats" class="chip">
-              СРЕД. ИГР {{ heroStats.avgGames }}
+              СРЕД. ИГР НА ЧЕМПЕ {{ heroStats.avgGames }}
             </span>
-            <span class="chip">АПДЕЙТ ~3М НАЗАД</span>
+            <span v-if="qualityMixLabel" class="chip chip--cyan">
+              {{ qualityMixLabel }}
+            </span>
           </div>
         </div>
       </div>
@@ -132,22 +134,34 @@
                 <th
                   class="champ-page__th champ-page__th--games champ-page__th--sortable"
                   :class="{
-                    'champ-page__th--active': sortKey === 'games',
+                    'champ-page__th--active': sortKey === 'championGames',
                   }"
-                  @click="toggleSort('games')"
+                  title="Игры на чемпе за 60 дней"
+                  @click="toggleSort('championGames')"
                 >
-                  Игры{{ sortIndicator('games') }}
+                  Игры{{ sortIndicator('championGames') }}
                 </th>
                 <th
                   class="champ-page__th champ-page__th--wr champ-page__th--sortable"
                   :class="{
-                    'champ-page__th--active': sortKey === 'winRate',
+                    'champ-page__th--active': sortKey === 'championWinRate',
                   }"
-                  @click="toggleSort('winRate')"
+                  title="Винрейт на чемпе за 60 дней"
+                  @click="toggleSort('championWinRate')"
                 >
-                  WR{{ sortIndicator('winRate') }}
+                  WR{{ sortIndicator('championWinRate') }}
                 </th>
-                <th class="champ-page__th champ-page__th--runes">Руны</th>
+                <th
+                  class="champ-page__th champ-page__th--share champ-page__th--sortable"
+                  :class="{
+                    'champ-page__th--active': sortKey === 'championShare',
+                  }"
+                  title="Доля игр на чемпе от общего пула"
+                  @click="toggleSort('championShare')"
+                >
+                  Пул{{ sortIndicator('championShare') }}
+                </th>
+                <th class="champ-page__th champ-page__th--quality">Тип</th>
               </tr>
             </thead>
             <tbody>
@@ -199,15 +213,15 @@
                 <td class="champ-page__td champ-page__td--games">
                   <div class="champ-page__games">
                     <span class="champ-page__games-total">
-                      {{ player.wins + player.losses }}
+                      {{ player.championGames }}
                     </span>
                     <span class="champ-page__games-wl">
                       <span class="champ-page__games-w">
-                        {{ player.wins }}В
+                        {{ player.championWins }}В
                       </span>
                       <span class="champ-page__games-sep">·</span>
                       <span class="champ-page__games-l">
-                        {{ player.losses }}П
+                        {{ player.championLosses }}П
                       </span>
                     </span>
                   </div>
@@ -216,38 +230,25 @@
                 <td
                   class="champ-page__td champ-page__td--wr"
                   :class="{
-                    'champ-page__td--high-wr': player.winRate >= 60,
-                    'champ-page__td--low-wr': player.winRate < 50,
+                    'champ-page__td--high-wr': player.championWinRate >= 60,
+                    'champ-page__td--low-wr': player.championWinRate < 50,
                   }"
                 >
-                  {{ player.winRate }}%
+                  {{ player.championWinRate }}%
                 </td>
 
-                <td class="champ-page__td champ-page__td--runes">
-                  <div v-if="player.runes" class="champ-page__runes">
-                    <div
-                      class="champ-page__rune champ-page__rune--primary"
-                      :title="`Keystone ${player.runes.keystone}`"
-                    >
-                      <img
-                        :src="getKeystoneIconUrl(player.runes.keystone)"
-                        alt="Keystone"
-                        class="champ-page__rune-icon"
-                      />
-                    </div>
-                    <div
-                      v-if="player.runes.secondaryStyle"
-                      class="champ-page__rune champ-page__rune--secondary"
-                      :title="`Secondary ${player.runes.secondaryStyle}`"
-                    >
-                      <img
-                        :src="getRuneStyleIconUrl(player.runes.secondaryStyle)"
-                        alt="Secondary tree"
-                        class="champ-page__rune-icon champ-page__rune-icon--small"
-                      />
-                    </div>
-                  </div>
-                  <span v-else class="champ-page__runes-empty">—</span>
+                <td class="champ-page__td champ-page__td--share">
+                  {{ player.championShare }}%
+                </td>
+
+                <td class="champ-page__td champ-page__td--quality">
+                  <span
+                    class="champ-page__quality"
+                    :class="`champ-page__quality--${player.quality}`"
+                    :title="qualityTooltip(player.quality)"
+                  >
+                    {{ QUALITY_LABEL[player.quality] }}
+                  </span>
                 </td>
               </tr>
             </tbody>
@@ -285,24 +286,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   getChampionImageUrl,
   getRankedEmblemUrl,
-  getKeystoneIconUrl,
-  getRuneStyleIconUrl,
   ROLES,
 } from '~/src/shared/config'
 import type { RegionCode, RoleId } from '~/src/shared/config'
 import { CHAMPIONS } from '~/src/entities/champion'
-import { buildApiUrl } from '~/src/shared/api'
-import type {
-  ChampionPlayersResponse,
-  ChampionPlayersMultiResponse,
-  ChampionPlayer,
-} from '~/src/shared/api'
+import { api, ApiError } from '~/src/shared/api'
+import type { ChampionPlayerGlobal, PlayerQuality } from '~/src/shared/api'
 
-type SortKey = 'lp' | 'winRate' | 'games'
+// Sort keys map 1:1 onto ChampionPlayerGlobal numeric fields, so we can
+// index into the record without a switch statement.
+type SortKey = 'lp' | 'championWinRate' | 'championGames' | 'championShare'
 type SortDir = 'asc' | 'desc'
 
 interface RegionGroup {
@@ -311,6 +308,10 @@ interface RegionGroup {
   regions: RegionCode[]
 }
 
+// /global returns data across all tracked regions (currently euw/na/kr
+// per HANDOFF). Region groups stay as pure client-side filters, so
+// non-tracked regions (eune/tr/ru/jp/br/lan/las/oce) will correctly
+// render as empty until backend coverage expands.
 const regionGroups: RegionGroup[] = [
   { id: 'major', name: 'Major', regions: ['kr', 'euw', 'na'] },
   {
@@ -325,6 +326,20 @@ const regionGroups: RegionGroup[] = [
     regions: ['na', 'br', 'lan', 'las', 'oce'],
   },
 ]
+
+const QUALITY_LABEL: Record<PlayerQuality, string> = {
+  main: 'Main',
+  regular: 'Regular',
+  casual: 'Casual',
+  trial: 'Trial',
+}
+
+const QUALITY_TOOLTIP: Record<PlayerQuality, string> = {
+  main: '≥30 игр в ranked solo за 60 дней, ≥20% пула, WR > 50%',
+  regular: '≥10 игр, ≥10% пула, WR > 50%',
+  casual: '≥5 игр на чемпе (любая доля и WR)',
+  trial: '2–4 игры на чемпе — фолбэк для редких пиков',
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -347,7 +362,8 @@ const sortKey = ref<SortKey>('lp')
 const sortDir = ref<SortDir>('desc')
 const loading = ref(false)
 const error = ref<string | null>(null)
-const players = ref<ChampionPlayer[] | null>(null)
+const players = ref<ChampionPlayerGlobal[] | null>(null)
+const qualityMix = ref<Partial<Record<PlayerQuality, number>>>({})
 
 const currentRegions = computed(() => {
   const group = regionGroups.find((g) => g.id === selectedGroup.value)
@@ -356,16 +372,24 @@ const currentRegions = computed(() => {
 
 const errorMessage = computed(() => {
   if (!error.value) return ''
-  if (error.value.includes('403')) {
-    return 'API ключ недействителен или истёк.'
-  }
   if (error.value.includes('429')) {
     return 'Превышен лимит запросов. Подожди немного и попробуй снова.'
   }
   if (error.value.includes('504') || error.value.includes('timeout')) {
-    return 'Сервер не успел ответить. Попробуй другой регион.'
+    return 'Сервер не успел ответить. Попробуй ещё раз.'
   }
   return `Ошибка: ${error.value}`
+})
+
+const qualityMixLabel = computed<string>(() => {
+  const mix = qualityMix.value
+  const parts: string[] = []
+  const order: PlayerQuality[] = ['main', 'regular', 'casual', 'trial']
+  for (const q of order) {
+    const n = mix[q] ?? 0
+    if (n > 0) parts.push(`${QUALITY_LABEL[q]} ${n}`)
+  }
+  return parts.join(' · ')
 })
 
 function selectGroup(groupId: string): void {
@@ -403,26 +427,33 @@ function formatTier(tier: string): string {
   return labels[t] ?? tier
 }
 
-async function fetchRegion(region: RegionCode): Promise<ChampionPlayer[]> {
-  const response = await $fetch<ChampionPlayersResponse>(
-    buildApiUrl('/api/riot/champion-players'),
-    {
-      query: { champion: championId, region },
-      timeout: 45000,
-    },
-  )
-  return response.players.map((p) => ({ ...p, region: p.region ?? region }))
+// Argmax over the five-role counter from /global. Ties break in template
+// order (top → support), which matches how Riot paints primary roles.
+type BackendRoleId = Exclude<RoleId, 'all'>
+
+function primaryRole(
+  roles: ChampionPlayerGlobal['roles'],
+): BackendRoleId | null {
+  const entries: [BackendRoleId, number][] = [
+    ['top', roles.top],
+    ['jungle', roles.jungle],
+    ['mid', roles.mid],
+    ['adc', roles.adc],
+    ['support', roles.support],
+  ]
+  let best: BackendRoleId | null = null
+  let bestCount = 0
+  for (const [id, count] of entries) {
+    if (count > bestCount) {
+      best = id
+      bestCount = count
+    }
+  }
+  return best
 }
 
-async function fetchMulti(regions: RegionCode[]): Promise<ChampionPlayer[]> {
-  const response = await $fetch<ChampionPlayersMultiResponse>(
-    buildApiUrl('/api/riot/champion-players/multi'),
-    {
-      query: { champion: championId, regions: regions.join(',') },
-      timeout: 60000,
-    },
-  )
-  return response.allPlayers
+function qualityTooltip(q: PlayerQuality): string {
+  return QUALITY_TOOLTIP[q]
 }
 
 const heroStats = computed<{ avgWr: number; avgGames: number } | null>(() => {
@@ -430,28 +461,39 @@ const heroStats = computed<{ avgWr: number; avgGames: number } | null>(() => {
     return null
   }
   const total = players.value.length
-  const wrSum = players.value.reduce((s, p) => s + p.winRate, 0)
-  const gamesSum = players.value.reduce((s, p) => s + p.wins + p.losses, 0)
+  const wrSum = players.value.reduce((s, p) => s + p.championWinRate, 0)
+  const gamesSum = players.value.reduce((s, p) => s + p.championGames, 0)
   return {
     avgWr: Math.round(wrSum / total),
     avgGames: Math.round(gamesSum / total),
   }
 })
 
-const filteredSortedPlayers = computed<ChampionPlayer[]>(() => {
+// Derived list — pure client-side filter + sort over the single /global
+// response. Region tabs and role tabs don't trigger a refetch; switching
+// tabs is instant.
+const filteredSortedPlayers = computed<ChampionPlayerGlobal[]>(() => {
   if (!players.value) return []
-  const filtered =
-    selectedRole.value === 'all'
-      ? players.value
-      : players.value.filter((p) => p.position === selectedRole.value)
+
+  const regionMatches = (p: ChampionPlayerGlobal): boolean => {
+    if (selectedRegion.value === 'all') {
+      return currentRegions.value.includes(p.region as RegionCode)
+    }
+    return p.region === selectedRegion.value
+  }
+
+  const roleMatches = (p: ChampionPlayerGlobal): boolean => {
+    if (selectedRole.value === 'all') return true
+    return primaryRole(p.roles) === selectedRole.value
+  }
+
+  const filtered = players.value.filter(
+    (p) => regionMatches(p) && roleMatches(p),
+  )
+
   const dir = sortDir.value === 'asc' ? 1 : -1
   const key = sortKey.value
-  return [...filtered].sort((a, b) => {
-    if (key === 'games') {
-      return dir * (a.wins + a.losses - (b.wins + b.losses))
-    }
-    return dir * (a[key] - b[key])
-  })
+  return [...filtered].sort((a, b) => dir * (a[key] - b[key]))
 })
 
 function toggleSort(key: SortKey): void {
@@ -473,52 +515,30 @@ async function loadPlayers(): Promise<void> {
   error.value = null
 
   try {
-    if (selectedRegion.value === 'all') {
-      const all = await fetchMulti(currentRegions.value)
-
-      const seen = new Set<string>()
-      const unique = all.filter((p) => {
-        if (seen.has(p.puuid)) return false
-        seen.add(p.puuid)
-        return true
-      })
-
-      unique.sort((a, b) => b.lp - a.lp)
-      players.value = unique.slice(0, 30)
-    } else {
-      players.value = await fetchRegion(selectedRegion.value)
-    }
+    const response = await api.championPlayers.global(championId, 100)
+    players.value = response.players
+    qualityMix.value = response.qualityMix
   } catch (e: unknown) {
-    const err = e as {
-      data?: { statusMessage?: string; message?: string }
-      statusMessage?: string
-      message?: string
-      status?: number
-    }
     error.value =
-      err.data?.statusMessage ??
-      err.data?.message ??
-      err.statusMessage ??
-      err.message ??
-      'Unknown error'
+      e instanceof ApiError
+        ? e.message
+        : e instanceof Error
+          ? e.message
+          : 'Unknown error'
   } finally {
     loading.value = false
   }
 }
 
-function openPlayerBuilds(player: ChampionPlayer): void {
+function openPlayerBuilds(player: ChampionPlayerGlobal): void {
   router.push({
     path: `/champion/${championId}/player/${player.puuid}`,
     query: {
-      region: player.region ?? '',
+      region: player.region,
       name: player.gameName,
     },
   })
 }
-
-watch([selectedRegion, selectedGroup], () => {
-  loadPlayers()
-})
 
 onMounted(() => {
   loadPlayers()
@@ -863,7 +883,12 @@ onMounted(() => {
   color: var(--acid);
 }
 
-.champ-page__th--runes {
+.champ-page__th--share {
+  text-align: right;
+  width: 70px;
+}
+
+.champ-page__th--quality {
   text-align: center;
   width: 88px;
 }
@@ -1013,50 +1038,51 @@ onMounted(() => {
   color: var(--red);
 }
 
-.champ-page__td--runes {
+.champ-page__td--share {
+  text-align: right;
+  color: var(--fg-dim);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.champ-page__td--quality {
   text-align: center;
 }
 
-.champ-page__runes {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+.champ-page__quality {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: help;
 }
 
-.champ-page__rune {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg);
-  border-radius: 50%;
+.champ-page__quality--main {
+  background: color-mix(in oklab, var(--acid) 16%, transparent);
+  color: var(--acid);
+  border: 1px solid color-mix(in oklab, var(--acid) 40%, transparent);
 }
 
-.champ-page__rune--primary {
-  width: 32px;
-  height: 32px;
+.champ-page__quality--regular {
+  background: color-mix(in oklab, var(--cyan) 14%, transparent);
+  color: var(--cyan);
+  border: 1px solid color-mix(in oklab, var(--cyan) 40%, transparent);
+}
+
+.champ-page__quality--casual {
+  background: transparent;
+  color: var(--fg-dim);
   border: 1px solid var(--border);
 }
 
-.champ-page__rune--secondary {
-  width: 20px;
-  height: 20px;
-  border: 1px solid var(--border);
-}
-
-.champ-page__rune-icon {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.champ-page__rune-icon--small {
-  width: 70%;
-  height: 70%;
-}
-
-.champ-page__runes-empty {
-  color: var(--border);
-  font-size: 14px;
+.champ-page__quality--trial {
+  background: color-mix(in oklab, var(--mag) 10%, transparent);
+  color: var(--mag);
+  border: 1px solid color-mix(in oklab, var(--mag) 30%, transparent);
 }
 
 .champ-page__empty {
@@ -1077,8 +1103,8 @@ onMounted(() => {
 }
 
 @media (max-width: 820px) {
-  .champ-page__th--runes,
-  .champ-page__td--runes {
+  .champ-page__th--share,
+  .champ-page__td--share {
     display: none;
   }
 
@@ -1109,6 +1135,11 @@ onMounted(() => {
 
   .champ-page__th--center,
   .champ-page__td--center {
+    display: none;
+  }
+
+  .champ-page__th--quality,
+  .champ-page__td--quality {
     display: none;
   }
 
