@@ -249,4 +249,4 @@ export const ru: Messages = {
   },
 }
 
-export default ru
+export default defineI18nLocale(() => ru)

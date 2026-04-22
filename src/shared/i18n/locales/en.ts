@@ -256,5 +256,9 @@ export const en = {
   },
 }
 
-export default en
+// `@nuxtjs/i18n` v9 loads locales lazily — the default export must be a
+// function (or `defineI18nLocale(...)`) that returns the messages, not
+// the object itself. We still keep `en` as a named const so `Messages`
+// can be derived from it via `typeof en` below.
+export default defineI18nLocale(() => en)
 export type Messages = typeof en

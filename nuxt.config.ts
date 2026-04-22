@@ -12,6 +12,10 @@ export default defineNuxtConfig({
   // typed TS modules (not JSON) because they double as the source of
   // truth for vue-i18n's key typing via `src/shared/i18n/vue-i18n.d.ts`.
   i18n: {
+    // v9 defaults all i18n paths to an `i18n/` root directory; we keep
+    // our locale files under `src/shared/i18n/locales/` for FSD, so we
+    // opt out and resolve paths from the project root instead.
+    restructureDir: false,
     strategy: 'no_prefix',
     defaultLocale: 'en',
     langDir: 'src/shared/i18n/locales/',
