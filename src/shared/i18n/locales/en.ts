@@ -56,6 +56,24 @@ export const en = {
   footer: {
     copy: '© 2026 · NOT AFFILIATED WITH RIOT',
     build: 'build 2026.04 · data lag ~3min · ★★★☆☆',
+    links: {
+      privacy: 'Privacy',
+      terms: 'Terms',
+    },
+  },
+
+  legal: {
+    effective: 'Effective {date}',
+    notAffiliated:
+      'LOL TRICKS IS NOT ENDORSED BY RIOT GAMES AND DOES NOT REFLECT THE VIEWS OR OPINIONS OF RIOT GAMES OR ANYONE OFFICIALLY INVOLVED IN PRODUCING OR MANAGING LEAGUE OF LEGENDS.',
+    privacy: {
+      kicker: '// PRIVACY POLICY',
+      title: 'Privacy Policy',
+    },
+    terms: {
+      kicker: '// TERMS OF SERVICE',
+      title: 'Terms of Service',
+    },
   },
 
   home: {

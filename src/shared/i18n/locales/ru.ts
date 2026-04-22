@@ -50,6 +50,24 @@ export const ru: Messages = {
   footer: {
     copy: '© 2026 · НЕ АФФИЛИРОВАН С RIOT',
     build: 'build 2026.04 · задержка данных ~3мин · ★★★☆☆',
+    links: {
+      privacy: 'Конфиденциальность',
+      terms: 'Условия',
+    },
+  },
+
+  legal: {
+    effective: 'Действует с {date}',
+    notAffiliated:
+      'LOL TRICKS НЕ ОДОБРЕН RIOT GAMES И НЕ ОТРАЖАЕТ ВЗГЛЯДЫ ИЛИ МНЕНИЯ RIOT GAMES И ЛЮБЫХ ОФИЦИАЛЬНЫХ УЧАСТНИКОВ РАЗРАБОТКИ ИЛИ УПРАВЛЕНИЯ LEAGUE OF LEGENDS.',
+    privacy: {
+      kicker: '// ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ',
+      title: 'Политика конфиденциальности',
+    },
+    terms: {
+      kicker: '// УСЛОВИЯ ИСПОЛЬЗОВАНИЯ',
+      title: 'Условия использования',
+    },
   },
 
   home: {

@@ -14,6 +14,15 @@
         </NuxtLink>
         <span class="app-footer__copy mono">{{ t('footer.copy') }}</span>
       </div>
+      <nav class="app-footer__links mono">
+        <NuxtLink to="/privacy" class="app-footer__link">
+          {{ t('footer.links.privacy') }}
+        </NuxtLink>
+        <span class="app-footer__sep" aria-hidden="true">·</span>
+        <NuxtLink to="/terms" class="app-footer__link">
+          {{ t('footer.links.terms') }}
+        </NuxtLink>
+      </nav>
       <span class="app-footer__build mono">{{ t('footer.build') }}</span>
     </div>
   </footer>
@@ -89,5 +98,28 @@ const { t } = useI18n()
   color: var(--fg-dim);
   letter-spacing: 0.15em;
   text-transform: uppercase;
+}
+
+.app-footer__links {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.app-footer__link {
+  color: var(--fg-dim);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.app-footer__link:hover {
+  color: var(--acid);
+}
+
+.app-footer__sep {
+  color: var(--border);
 }
 </style>
