@@ -149,6 +149,10 @@
             <thead>
               <tr>
                 <th class="champ-page__th champ-page__th--rank">#</th>
+                <th
+                  class="champ-page__th champ-page__th--avatar"
+                  aria-label="avatar"
+                />
                 <th class="champ-page__th">
                   {{ t('championPage.table.th.player') }}
                 </th>
@@ -174,6 +178,24 @@
                 >
                   {{ t('championPage.table.th.games')
                   }}{{ sortIndicator('championGames') }}
+                </th>
+                <th
+                  class="champ-page__th champ-page__th--kda"
+                  :title="t('championPage.table.th.kdaTitle')"
+                >
+                  {{ t('championPage.table.th.kda') }}
+                </th>
+                <th
+                  class="champ-page__th champ-page__th--runes"
+                  :title="t('championPage.table.th.runesTitle')"
+                >
+                  {{ t('championPage.table.th.runes') }}
+                </th>
+                <th
+                  class="champ-page__th champ-page__th--first-item"
+                  :title="t('championPage.table.th.firstItemTitle')"
+                >
+                  {{ t('championPage.table.th.firstItem') }}
                 </th>
                 <th
                   class="champ-page__th champ-page__th--wr champ-page__th--sortable"
@@ -211,6 +233,18 @@
               >
                 <td class="champ-page__td champ-page__td--rank">
                   {{ index + 1 }}
+                </td>
+
+                <td class="champ-page__td champ-page__td--avatar">
+                  <img
+                    v-if="player.profileIconId != null"
+                    :src="getProfileIconUrl(player.profileIconId)"
+                    :alt="`${getPlayerName(player.gameName)} avatar`"
+                    class="champ-page__avatar"
+                    loading="lazy"
+                    @error="onAvatarError"
+                  />
+                  <span v-else class="champ-page__avatar-placeholder" />
                 </td>
 
                 <td class="champ-page__td champ-page__td--name">
@@ -265,6 +299,56 @@
                       </span>
                     </span>
                   </div>
+                </td>
+
+                <td class="champ-page__td champ-page__td--kda">
+                  <div v-if="player.kda" class="champ-page__kda">
+                    <span class="champ-page__kda-ratio">
+                      {{ formatKdaRatio(player.kda) }}
+                    </span>
+                    <span class="champ-page__kda-breakdown">
+                      <span class="champ-page__kda-k">
+                        {{ formatKdaValue(player.kda.kills) }}
+                      </span>
+                      <span class="champ-page__kda-sep">/</span>
+                      <span class="champ-page__kda-d">
+                        {{ formatKdaValue(player.kda.deaths) }}
+                      </span>
+                      <span class="champ-page__kda-sep">/</span>
+                      <span class="champ-page__kda-a">
+                        {{ formatKdaValue(player.kda.assists) }}
+                      </span>
+                    </span>
+                  </div>
+                  <span v-else class="champ-page__kda-empty">—</span>
+                </td>
+
+                <td class="champ-page__td champ-page__td--runes">
+                  <div v-if="player.runes" class="champ-page__runes">
+                    <img
+                      v-if="keystoneIcon(player.runes.keystone)"
+                      :src="keystoneIcon(player.runes.keystone) ?? ''"
+                      :alt="`keystone ${player.runes.keystone}`"
+                      class="champ-page__runes-keystone"
+                      loading="lazy"
+                    />
+                    <img
+                      v-if="styleIcon(player.runes.secondaryStyle)"
+                      :src="styleIcon(player.runes.secondaryStyle) ?? ''"
+                      :alt="`style ${player.runes.secondaryStyle}`"
+                      class="champ-page__runes-secondary"
+                      loading="lazy"
+                    />
+                  </div>
+                  <span v-else class="champ-page__runes-empty">—</span>
+                </td>
+
+                <td class="champ-page__td champ-page__td--first-item">
+                  <ItemTooltip
+                    v-if="player.firstItem"
+                    :item-id="player.firstItem"
+                  />
+                  <span v-else class="champ-page__first-item-empty">—</span>
                 </td>
 
                 <td
@@ -336,10 +420,14 @@
 import { ref, computed, onMounted } from 'vue'
 import {
   getChampionImageUrl,
+  getProfileIconUrl,
   getRankedEmblemUrl,
+  loadRunesMap,
+  resolveRuneIconUrl,
   ROLES,
 } from '~/src/shared/config'
 import type { RegionCode, RoleId } from '~/src/shared/config'
+import { ItemTooltip } from '~/src/shared/ui'
 import { CHAMPIONS, championDisplayName } from '~/src/entities/champion'
 import { api, ApiError } from '~/src/shared/api'
 import type { ChampionPlayerGlobal, PlayerQuality } from '~/src/shared/api'
@@ -398,6 +486,18 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const players = ref<ChampionPlayerGlobal[] | null>(null)
 const qualityMix = ref<Partial<Record<PlayerQuality, number>>>({})
+// DDragon runesReforged.json loaded once on mount; icons render as soon
+// as it resolves. If the fetch fails the R column stays empty — not
+// worth blocking the whole page on it.
+const runesMap = ref<Map<number, string> | null>(null)
+
+function keystoneIcon(id: number): string | null {
+  return resolveRuneIconUrl(runesMap.value, id)
+}
+
+function styleIcon(id: number): string | null {
+  return resolveRuneIconUrl(runesMap.value, id)
+}
 
 const currentRegions = computed(() => {
   const group = regionGroups.find((g) => g.id === selectedGroup.value)
@@ -418,7 +518,7 @@ const errorMessage = computed(() => {
 const qualityMixLabel = computed<string>(() => {
   const mix = qualityMix.value
   const parts: string[] = []
-  const order: PlayerQuality[] = ['main', 'regular', 'casual', 'trial']
+  const order: PlayerQuality[] = ['main', 'regular']
   for (const q of order) {
     const n = mix[q] ?? 0
     if (n > 0) parts.push(`${qualityLabel(q)} ${n}`)
@@ -439,8 +539,40 @@ function getPlayerName(gameName: string): string {
   return gameName.split('#')[0] ?? gameName
 }
 
+// DDragon returns 404 for profileIconIds that were introduced after the
+// pinned patch (or removed). Swap to the default icon (29) on failure
+// so the layout doesn't get a broken-image glyph.
+const FALLBACK_PROFILE_ICON_URL = getProfileIconUrl(29)
+
+function onAvatarError(e: Event): void {
+  const img = e.target as HTMLImageElement | null
+  if (img && img.src !== FALLBACK_PROFILE_ICON_URL) {
+    img.src = FALLBACK_PROFILE_ICON_URL
+  }
+}
+
 function getPlayerTag(gameName: string): string {
   return gameName.split('#')[1] ?? ''
+}
+
+// KDA values arrive pre-rounded to 1 decimal. Drop the ".0" for whole
+// numbers so the column stays compact: "5 / 2.1 / 7" instead of
+// "5.0 / 2.1 / 7.0".
+function formatKdaValue(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1)
+}
+
+// Classic (K+A)/D ratio formatted as "2.64:1". When average deaths
+// round to 0 the ratio is undefined — show "Perfect" as the widely
+// used convention.
+function formatKdaRatio(kda: {
+  kills: number
+  deaths: number
+  assists: number
+}): string {
+  if (kda.deaths <= 0) return t('playerBuilds.perfect')
+  const ratio = (kda.kills + kda.assists) / kda.deaths
+  return `${ratio.toFixed(2)}:1`
 }
 
 function formatTier(tier: string): string {
@@ -549,7 +681,7 @@ async function loadPlayers(): Promise<void> {
   error.value = null
 
   try {
-    const response = await api.championPlayers.global(championId, 100)
+    const response = await api.championPlayers.global(championId)
     players.value = response.players
     qualityMix.value = response.qualityMix
   } catch (e: unknown) {
@@ -564,6 +696,10 @@ async function loadPlayers(): Promise<void> {
   }
 }
 
+// Leaderboard click -> champion-scoped player page. The route
+// `/champion/[id]/player/[puuid]` shows this player's history on
+// *this* champion (PlayerBuildsPage). The champion-agnostic variant
+// at `/player/[puuid]` is reached from the home feed instead.
 function openPlayerBuilds(player: ChampionPlayerGlobal): void {
   router.push({
     path: `/champion/${championId}/player/${player.puuid}`,
@@ -576,6 +712,14 @@ function openPlayerBuilds(player: ChampionPlayerGlobal): void {
 
 onMounted(() => {
   loadPlayers()
+  loadRunesMap()
+    .then((map) => {
+      runesMap.value = map
+    })
+    .catch((e: unknown) => {
+      // Non-fatal — R column just stays empty.
+      console.warn('[runes] failed to load runesReforged.json', e)
+    })
 })
 </script>
 
@@ -884,6 +1028,47 @@ onMounted(() => {
   text-align: center;
 }
 
+.champ-page__th--avatar {
+  width: 44px;
+  min-width: 44px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.champ-page__td--avatar {
+  width: 44px;
+  min-width: 44px;
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+}
+
+/* width/height explicitly set here; max-width: none overrides the
+ * global `img { max-width: 100% }` rule — without it, table auto-layout
+ * can shrink the cell below 32px and clamp the img horizontally while
+ * height stays 32px, producing a squashed oval instead of a circle. */
+.champ-page__avatar {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  max-width: none;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  object-fit: cover;
+  display: inline-block;
+  background: var(--bg-2);
+}
+
+.champ-page__avatar-placeholder {
+  display: inline-block;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+}
+
 .champ-page__th--center {
   text-align: center;
   width: 80px;
@@ -1079,6 +1264,111 @@ onMounted(() => {
   font-variant-numeric: tabular-nums;
 }
 
+/* KDA column */
+.champ-page__th--kda {
+  text-align: center;
+  width: 120px;
+}
+
+.champ-page__td--kda {
+  text-align: center;
+}
+
+.champ-page__kda {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.champ-page__kda-ratio {
+  color: var(--fg);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.champ-page__kda-breakdown {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--fg-dim);
+}
+
+.champ-page__kda-k {
+  color: var(--acid);
+}
+
+.champ-page__kda-d {
+  color: var(--red);
+}
+
+.champ-page__kda-a {
+  color: var(--cyan);
+}
+
+.champ-page__kda-sep {
+  color: var(--border);
+  font-weight: 400;
+}
+
+.champ-page__kda-empty {
+  color: var(--border);
+}
+
+/* Runes column */
+.champ-page__th--runes {
+  text-align: center;
+  width: 72px;
+}
+
+.champ-page__td--runes {
+  text-align: center;
+}
+
+.champ-page__runes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.champ-page__runes-keystone {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.champ-page__runes-secondary {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.champ-page__runes-empty {
+  color: var(--border);
+}
+
+/* First item column */
+.champ-page__th--first-item {
+  text-align: center;
+  width: 56px;
+}
+
+.champ-page__td--first-item {
+  /* Must not clip the absolute-positioned tooltip inside ItemTooltip. */
+  text-align: center;
+  overflow: visible;
+}
+
+.champ-page__first-item-empty {
+  color: var(--border);
+}
+
 .champ-page__td--quality {
   text-align: center;
 }
@@ -1105,18 +1395,6 @@ onMounted(() => {
   background: color-mix(in oklab, var(--cyan) 14%, transparent);
   color: var(--cyan);
   border: 1px solid color-mix(in oklab, var(--cyan) 40%, transparent);
-}
-
-.champ-page__quality--casual {
-  background: transparent;
-  color: var(--fg-dim);
-  border: 1px solid var(--border);
-}
-
-.champ-page__quality--trial {
-  background: color-mix(in oklab, var(--mag) 10%, transparent);
-  color: var(--mag);
-  border: 1px solid color-mix(in oklab, var(--mag) 30%, transparent);
 }
 
 .champ-page__empty {
@@ -1150,6 +1428,16 @@ onMounted(() => {
   .champ-page__games-wl {
     display: none;
   }
+
+  .champ-page__th--runes,
+  .champ-page__td--runes {
+    display: none;
+  }
+
+  .champ-page__th--first-item,
+  .champ-page__td--first-item {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1174,6 +1462,11 @@ onMounted(() => {
 
   .champ-page__th--quality,
   .champ-page__td--quality {
+    display: none;
+  }
+
+  .champ-page__th--kda,
+  .champ-page__td--kda {
     display: none;
   }
 

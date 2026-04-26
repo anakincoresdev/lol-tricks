@@ -1,86 +1,72 @@
 <template>
-  <div class="builds-page">
-    <div class="builds-page__container">
-      <NuxtLink :to="`/champion/${championId}`" class="builds-page__back">
-        {{ t('playerBuilds.backToPlayers') }}
+  <div class="player-page">
+    <div class="player-page__container">
+      <NuxtLink to="/" class="player-page__back">
+        {{ t('player.backHome') }}
       </NuxtLink>
 
-      <div v-if="champion" class="builds-page__hero">
+      <div class="player-page__hero">
         <img
-          :src="getChampionImageUrl(champion.id)"
-          :alt="championDisplayName(champion, locale)"
-          class="builds-page__champ-icon"
+          v-if="profileIconUrl"
+          :src="profileIconUrl"
+          :alt="displayName"
+          class="player-page__avatar"
+          loading="lazy"
         />
-        <div class="builds-page__hero-info">
-          <h1 class="builds-page__title">
+        <div v-else class="player-page__avatar player-page__avatar--empty" />
+
+        <div class="player-page__hero-info">
+          <h1 class="player-page__title">
             {{ displayName }}
           </h1>
-          <p class="builds-page__subtitle">
-            {{
-              t('playerBuilds.subtitle', {
-                champion: championDisplayName(champion, locale),
-              })
-            }}
+          <p class="player-page__subtitle">
+            {{ t('player.subtitle', { region: regionLabel }) }}
           </p>
-          <div
-            v-if="data && data.masteryPoints > 0"
-            class="builds-page__mastery"
-          >
-            <span class="builds-page__mastery-level">
-              Lvl {{ data.masteryLevel }}
+          <div v-if="data && data.tier" class="player-page__rank">
+            <span class="player-page__rank-tier">
+              {{ formatRankLine(data.tier, data.rank, data.lp) }}
             </span>
-            {{
-              t('playerBuilds.masteryPoints', {
-                value: formatMastery(data.masteryPoints),
-              })
-            }}
           </div>
         </div>
       </div>
 
-      <div v-if="loading" class="builds-page__loading">
-        <div class="builds-page__spinner" />
-        <p>{{ t('playerBuilds.loading') }}</p>
-        <p class="builds-page__loading-hint">
-          {{
-            t('playerBuilds.loadingHint', {
-              champion: champion
-                ? championDisplayName(champion, locale)
-                : championId,
-            })
-          }}
+      <div v-if="loading" class="player-page__loading">
+        <div class="player-page__spinner" />
+        <p>{{ t('player.loading') }}</p>
+        <p class="player-page__loading-hint">
+          {{ t('player.loadingHint') }}
         </p>
       </div>
 
-      <div v-if="error" class="builds-page__error">
+      <div v-if="error" class="player-page__error">
         {{ errorMessage }}
       </div>
 
       <div
         v-if="data && data.matches.length > 0 && !loading"
-        class="builds-page__results"
+        class="player-page__results"
       >
-        <h2 class="builds-page__results-title">
-          {{ t('playerBuilds.foundMatches', { count: data.matches.length }) }}
+        <h2 class="player-page__results-title">
+          {{ t('player.foundMatches', { count: data.matches.length }) }}
         </h2>
 
-        <div class="builds-page__matches">
+        <div class="player-page__matches">
           <div
             v-for="match in data.matches"
             :key="match.matchId"
-            class="builds-page__match"
+            class="player-page__match"
             :class="
-              match.win ? 'builds-page__match--win' : 'builds-page__match--loss'
+              match.win ? 'player-page__match--win' : 'player-page__match--loss'
             "
           >
-            <div class="builds-page__match-summary">
-              <div class="builds-page__match-result">
+            <div class="player-page__match-summary">
+              <div class="player-page__match-result">
                 <span
-                  class="builds-page__match-badge"
+                  class="player-page__match-badge"
                   :class="
                     match.win
-                      ? 'builds-page__match-badge--win'
-                      : 'builds-page__match-badge--loss'
+                      ? 'player-page__match-badge--win'
+                      : 'player-page__match-badge--loss'
                   "
                 >
                   {{
@@ -89,107 +75,114 @@
                       : t('championPage.lossesLetter')
                   }}
                 </span>
-                <span class="builds-page__match-duration">
+                <span class="player-page__match-duration">
                   {{ formatDuration(match.gameDuration) }}
                 </span>
               </div>
 
-              <div class="builds-page__match-kda">
-                <span class="builds-page__kda-numbers">
+              <img
+                :src="getChampionImageUrl(match.championName)"
+                :alt="match.championName"
+                class="player-page__match-champion"
+                loading="lazy"
+              />
+
+              <div class="player-page__match-kda">
+                <span class="player-page__kda-numbers">
                   {{ match.kills }}/{{ match.deaths }}/{{ match.assists }}
                 </span>
-                <span class="builds-page__kda-ratio">
+                <span class="player-page__kda-ratio">
                   {{ formatKda(match.kills, match.deaths, match.assists) }}
-                  {{ t('playerBuilds.kdaLabel') }}
+                  {{ t('player.kdaLabel') }}
                 </span>
               </div>
 
-              <div class="builds-page__match-cs">{{ match.cs }} CS</div>
+              <div class="player-page__match-cs">{{ match.cs }} CS</div>
 
-              <div class="builds-page__match-items">
+              <div class="player-page__match-items">
                 <div
                   v-for="(item, idx) in match.items.slice(0, 6)"
                   :key="idx"
-                  class="builds-page__item-slot"
+                  class="player-page__item-slot"
                 >
                   <img
                     v-if="item > 0"
                     :src="getItemImageUrl(item)"
                     :alt="`Item ${item}`"
-                    class="builds-page__item-icon"
+                    class="player-page__item-icon"
                   />
-                  <div v-else class="builds-page__item-empty" />
+                  <div v-else class="player-page__item-empty" />
                 </div>
                 <div
-                  class="builds-page__item-slot builds-page__item-slot--trinket"
+                  class="player-page__item-slot player-page__item-slot--trinket"
                 >
                   <img
                     v-if="match.items[6] && match.items[6] > 0"
                     :src="getItemImageUrl(match.items[6])"
                     alt="Trinket"
-                    class="builds-page__item-icon"
+                    class="player-page__item-icon"
                   />
-                  <div v-else class="builds-page__item-empty" />
+                  <div v-else class="player-page__item-empty" />
                 </div>
               </div>
 
-              <div class="builds-page__match-date">
+              <div class="player-page__match-date">
                 {{ formatDate(match.gameCreation) }}
               </div>
             </div>
 
             <div
               v-if="match.participants && match.participants.length > 0"
-              class="builds-page__teams"
+              class="player-page__teams"
             >
-              <div class="builds-page__team builds-page__team--allies">
-                <span class="builds-page__team-label mono">
-                  {{ t('playerBuilds.teams.allies') }}
+              <div class="player-page__team player-page__team--allies">
+                <span class="player-page__team-label mono">
+                  {{ t('player.teams.allies') }}
                 </span>
                 <NuxtLink
                   v-for="p in splitTeams(match).allies"
                   :key="`${match.matchId}:ally:${p.puuid}`"
                   :to="participantLink(p)"
-                  class="builds-page__participant"
+                  class="player-page__participant"
                   :class="{
-                    'builds-page__participant--target': p.puuid === puuid,
+                    'player-page__participant--target': p.puuid === puuid,
                   }"
                 >
                   <img
                     :src="getChampionImageUrl(p.championName)"
                     :alt="p.championName"
-                    class="builds-page__participant-icon"
+                    class="player-page__participant-icon"
                     loading="lazy"
                   />
-                  <span class="builds-page__participant-name">
+                  <span class="player-page__participant-name">
                     {{ displayParticipantName(p) }}
                   </span>
-                  <span class="builds-page__participant-kda mono">
+                  <span class="player-page__participant-kda mono">
                     {{ p.kills }}/{{ p.deaths }}/{{ p.assists }}
                   </span>
                 </NuxtLink>
               </div>
 
-              <div class="builds-page__team builds-page__team--enemies">
-                <span class="builds-page__team-label mono">
-                  {{ t('playerBuilds.teams.enemies') }}
+              <div class="player-page__team player-page__team--enemies">
+                <span class="player-page__team-label mono">
+                  {{ t('player.teams.enemies') }}
                 </span>
                 <NuxtLink
                   v-for="p in splitTeams(match).enemies"
                   :key="`${match.matchId}:enemy:${p.puuid}`"
                   :to="participantLink(p)"
-                  class="builds-page__participant"
+                  class="player-page__participant"
                 >
                   <img
                     :src="getChampionImageUrl(p.championName)"
                     :alt="p.championName"
-                    class="builds-page__participant-icon"
+                    class="player-page__participant-icon"
                     loading="lazy"
                   />
-                  <span class="builds-page__participant-name">
+                  <span class="player-page__participant-name">
                     {{ displayParticipantName(p) }}
                   </span>
-                  <span class="builds-page__participant-kda mono">
+                  <span class="player-page__participant-kda mono">
                     {{ p.kills }}/{{ p.deaths }}/{{ p.assists }}
                   </span>
                 </NuxtLink>
@@ -201,19 +194,11 @@
 
       <div
         v-if="data && data.matches.length === 0 && !loading"
-        class="builds-page__empty"
+        class="player-page__empty"
       >
-        <p>
-          {{
-            t('playerBuilds.emptyNoMatches', {
-              champion: champion
-                ? championDisplayName(champion, locale)
-                : championId,
-            })
-          }}
-        </p>
-        <p class="builds-page__empty-hint">
-          {{ t('playerBuilds.emptyHint') }}
+        <p>{{ t('player.emptyNoMatches') }}</p>
+        <p class="player-page__empty-hint">
+          {{ t('player.emptyHint') }}
         </p>
       </div>
     </div>
@@ -222,12 +207,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { getChampionImageUrl, getItemImageUrl } from '~/src/shared/config'
-import { CHAMPIONS, championDisplayName } from '~/src/entities/champion'
+import {
+  getChampionImageUrl,
+  getItemImageUrl,
+  getProfileIconUrl,
+} from '~/src/shared/config'
 import { api, ApiError } from '~/src/shared/api'
 import type {
-  PlayerChampionMatchesResponse,
-  PlayerChampionMatch,
+  PlayerMatchesResponse,
+  PlayerMatch,
   MatchParticipantSummary,
 } from '~/src/shared/api'
 import { useI18n } from '#imports'
@@ -235,33 +223,34 @@ import { useI18n } from '#imports'
 const { t, locale } = useI18n()
 
 const route = useRoute()
-const championId = route.params['id'] as string
 const puuid = route.params['puuid'] as string
 const region = (route.query['region'] as string) ?? 'euw'
 const nameFromQuery = route.query['name'] as string | undefined
 
-const champion = CHAMPIONS.find(
-  (c) => c.id.toLowerCase() === championId.toLowerCase(),
-)
-
 const loading = ref(false)
 const error = ref<string | null>(null)
-const data = ref<PlayerChampionMatchesResponse | null>(null)
+const data = ref<PlayerMatchesResponse | null>(null)
 
 const displayName = computed(() => {
   if (data.value?.gameName && data.value.gameName !== 'Unknown') {
     return data.value.gameName
   }
-  return nameFromQuery ?? t('playerBuilds.defaultPlayerName')
+  return nameFromQuery ?? t('player.defaultPlayerName')
+})
+
+const regionLabel = computed(() => t(`regions.${region}`))
+
+// Neutral fallback icon id 29 (basic Poro) when the DB has no record
+// and the summoner-v4 fallback on the backend also failed. Using a
+// valid DDragon id keeps the <img> tag rather than a blank slot.
+const profileIconUrl = computed(() => {
+  const id = data.value?.profileIconId
+  if (typeof id === 'number') return getProfileIconUrl(id)
+  return null
 })
 
 useHead({
-  title: computed(() => {
-    const champName = champion
-      ? championDisplayName(champion, locale.value)
-      : championId
-    return `${displayName.value} — ${champName} | ${t('app.name')}`
-  }),
+  title: computed(() => `${displayName.value} | ${t('app.name')}`),
 })
 
 const errorMessage = computed(() => {
@@ -278,14 +267,20 @@ const errorMessage = computed(() => {
   return t('common.error', { message: error.value })
 })
 
-function formatMastery(points: number): string {
-  if (points >= 1_000_000) {
-    return `${(points / 1_000_000).toFixed(1)}M`
-  }
-  if (points >= 1_000) {
-    return `${Math.round(points / 1_000)}K`
-  }
-  return String(points)
+// Format `GOLD IV 42 LP` style line. Rank letter is only meaningful
+// below Master — Master/GM/Challenger always carry rank `I` in Riot's
+// payload, so strip it there.
+function formatRankLine(
+  tier: string,
+  rank: string | null,
+  lp: number | null,
+): string {
+  const t = tier.toUpperCase()
+  const hideRank = t === 'MASTER' || t === 'GRANDMASTER' || t === 'CHALLENGER'
+  const parts: string[] = [t]
+  if (!hideRank && rank) parts.push(rank)
+  if (typeof lp === 'number') parts.push(`${lp} LP`)
+  return parts.join(' ')
 }
 
 function formatDuration(seconds: number): string {
@@ -295,7 +290,7 @@ function formatDuration(seconds: number): string {
 }
 
 function formatKda(kills: number, deaths: number, assists: number): string {
-  if (deaths === 0) return t('playerBuilds.perfect')
+  if (deaths === 0) return t('player.perfect')
   return ((kills + assists) / deaths).toFixed(1)
 }
 
@@ -305,20 +300,16 @@ function formatDate(timestamp: number): string {
   const diffMs = now.getTime() - date.getTime()
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffDays === 0) return t('playerBuilds.date.today')
-  if (diffDays === 1) return t('playerBuilds.date.yesterday')
-  if (diffDays < 7) return t('playerBuilds.date.daysAgo', { days: diffDays })
+  if (diffDays === 0) return t('player.date.today')
+  if (diffDays === 1) return t('player.date.yesterday')
+  if (diffDays < 7) return t('player.date.daysAgo', { days: diffDays })
   return date.toLocaleDateString(locale.value, {
     day: 'numeric',
     month: 'short',
   })
 }
 
-// Team split uses the per-match `win` flag as the side key: every
-// member of the winning team has `win === true`, every loser has
-// `win === false`, so the target player's team = participants whose
-// `win` matches the row's own `win`.
-function splitTeams(match: PlayerChampionMatch): {
+function splitTeams(match: PlayerMatch): {
   allies: MatchParticipantSummary[]
   enemies: MatchParticipantSummary[]
 } {
@@ -334,10 +325,6 @@ function splitTeams(match: PlayerChampionMatch): {
   return { allies, enemies }
 }
 
-// Clicking a roster entry always opens that player's champion-agnostic
-// page (`/player/[puuid]`) — from a match card, the most useful next
-// step is usually "who is this person across all their games", not
-// "what do they do on this exact champion".
 function participantLink(p: MatchParticipantSummary): {
   path: string
   query: Record<string, string>
@@ -361,7 +348,7 @@ async function loadMatches(): Promise<void> {
   error.value = null
 
   try {
-    data.value = await api.playerMatches.get(puuid, championId, region)
+    data.value = await api.player.matches(puuid, region)
   } catch (e: unknown) {
     error.value =
       e instanceof ApiError
@@ -380,17 +367,17 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.builds-page {
+.player-page {
   min-height: calc(100vh - 64px);
 }
 
-.builds-page__container {
+.player-page__container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 24px 64px;
 }
 
-.builds-page__back {
+.player-page__back {
   display: inline-block;
   color: var(--fg-dim);
   font-family: 'JetBrains Mono', monospace;
@@ -403,11 +390,11 @@ onMounted(() => {
   transition: color 0.15s;
 }
 
-.builds-page__back:hover {
+.player-page__back:hover {
   color: var(--acid);
 }
 
-.builds-page__hero {
+.player-page__hero {
   display: flex;
   align-items: center;
   gap: 24px;
@@ -416,30 +403,37 @@ onMounted(() => {
   border-bottom: 1px solid var(--border);
 }
 
-.builds-page__champ-icon {
+.player-page__avatar {
   width: 96px;
   height: 96px;
   border-radius: 4px;
   border: 2px solid var(--acid);
   flex-shrink: 0;
+  object-fit: cover;
 }
 
-.builds-page__hero-info {
+.player-page__avatar--empty {
+  background: var(--surface);
+}
+
+.player-page__hero-info {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
-.builds-page__title {
+.player-page__title {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 48px;
+  font-size: 42px;
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1;
   color: var(--fg);
+  word-break: break-all;
 }
 
-.builds-page__subtitle {
+.player-page__subtitle {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--fg-dim);
@@ -447,34 +441,32 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
-.builds-page__mastery {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: var(--acid);
+.player-page__rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin-top: 4px;
-  letter-spacing: 0.05em;
 }
 
-.builds-page__mastery-level {
-  display: inline-block;
-  font-size: 10px;
+.player-page__rank-tier {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
   font-weight: 700;
   color: var(--bg);
   background: var(--acid);
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: 3px;
-  margin-right: 6px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.builds-page__loading {
+.player-page__loading {
   text-align: center;
   padding: 48px 16px;
   color: var(--fg-dim);
 }
 
-.builds-page__spinner {
+.player-page__spinner {
   width: 40px;
   height: 40px;
   border: 3px solid var(--border);
@@ -490,7 +482,7 @@ onMounted(() => {
   }
 }
 
-.builds-page__loading-hint {
+.player-page__loading-hint {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
@@ -499,7 +491,7 @@ onMounted(() => {
   margin-top: 8px;
 }
 
-.builds-page__error {
+.player-page__error {
   padding: 12px 16px;
   background: color-mix(in oklab, var(--red) 10%, transparent);
   border: 1px solid var(--red);
@@ -510,7 +502,7 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-.builds-page__results-title {
+.player-page__results-title {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   font-weight: 600;
@@ -520,13 +512,13 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-.builds-page__matches {
+.player-page__matches {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.builds-page__match {
+.player-page__match {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -537,25 +529,25 @@ onMounted(() => {
   transition: border-color 0.15s;
 }
 
-.builds-page__match-summary {
+.player-page__match:hover {
+  border-color: var(--fg-dim);
+}
+
+.player-page__match--win {
+  border-left: 3px solid var(--acid);
+}
+
+.player-page__match--loss {
+  border-left: 3px solid var(--red);
+}
+
+.player-page__match-summary {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.builds-page__match:hover {
-  border-color: var(--fg-dim);
-}
-
-.builds-page__match--win {
-  border-left: 3px solid var(--acid);
-}
-
-.builds-page__match--loss {
-  border-left: 3px solid var(--red);
-}
-
-.builds-page__match-result {
+.player-page__match-result {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -563,7 +555,7 @@ onMounted(() => {
   min-width: 44px;
 }
 
-.builds-page__match-badge {
+.player-page__match-badge {
   width: 28px;
   height: 28px;
   display: flex;
@@ -575,30 +567,38 @@ onMounted(() => {
   font-weight: 700;
 }
 
-.builds-page__match-badge--win {
+.player-page__match-badge--win {
   background: var(--acid);
   color: var(--bg);
 }
 
-.builds-page__match-badge--loss {
+.player-page__match-badge--loss {
   background: var(--red);
   color: #fff;
 }
 
-.builds-page__match-duration {
+.player-page__match-duration {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   color: var(--fg-dim);
   letter-spacing: 0.05em;
 }
 
-.builds-page__match-kda {
+.player-page__match-champion {
+  width: 40px;
+  height: 40px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.player-page__match-kda {
   display: flex;
   flex-direction: column;
   min-width: 80px;
 }
 
-.builds-page__kda-numbers {
+.player-page__kda-numbers {
   font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
   font-weight: 700;
@@ -606,26 +606,26 @@ onMounted(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.builds-page__kda-ratio {
+.player-page__kda-ratio {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--fg-dim);
 }
 
-.builds-page__match-cs {
+.player-page__match-cs {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
   color: var(--fg-dim);
   min-width: 50px;
 }
 
-.builds-page__match-items {
+.player-page__match-items {
   display: flex;
   gap: 3px;
   align-items: center;
 }
 
-.builds-page__item-slot {
+.player-page__item-slot {
   width: 30px;
   height: 30px;
   border-radius: 3px;
@@ -633,24 +633,24 @@ onMounted(() => {
   background: var(--bg);
 }
 
-.builds-page__item-slot--trinket {
+.player-page__item-slot--trinket {
   border-radius: 50%;
   margin-left: 4px;
 }
 
-.builds-page__item-icon {
+.player-page__item-icon {
   width: 100%;
   height: 100%;
   display: block;
 }
 
-.builds-page__item-empty {
+.player-page__item-empty {
   width: 100%;
   height: 100%;
   background: var(--bg);
 }
 
-.builds-page__match-date {
+.player-page__match-date {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--fg-dim);
@@ -659,7 +659,7 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.builds-page__empty {
+.player-page__empty {
   text-align: center;
   padding: 48px 16px;
   color: var(--fg-dim);
@@ -669,14 +669,14 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
-.builds-page__empty-hint {
+.player-page__empty-hint {
   font-size: 11px;
   margin-top: 8px;
   color: var(--fg-dim);
   opacity: 0.7;
 }
 
-.builds-page__teams {
+.player-page__teams {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
@@ -684,14 +684,14 @@ onMounted(() => {
   border-top: 1px dashed var(--border);
 }
 
-.builds-page__team {
+.player-page__team {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
 
-.builds-page__team-label {
+.player-page__team-label {
   font-size: 10px;
   font-weight: 600;
   color: var(--fg-dim);
@@ -700,11 +700,11 @@ onMounted(() => {
   margin-bottom: 2px;
 }
 
-.builds-page__team--enemies .builds-page__team-label {
+.player-page__team--enemies .player-page__team-label {
   text-align: right;
 }
 
-.builds-page__participant {
+.player-page__participant {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -721,22 +721,22 @@ onMounted(() => {
     color 0.15s;
 }
 
-.builds-page__team--enemies .builds-page__participant {
+.player-page__team--enemies .player-page__participant {
   flex-direction: row-reverse;
   text-align: right;
 }
 
-.builds-page__participant:hover {
+.player-page__participant:hover {
   background: var(--bg);
   color: var(--acid);
 }
 
-.builds-page__participant--target {
+.player-page__participant--target {
   background: color-mix(in oklab, var(--acid) 12%, transparent);
   color: var(--acid);
 }
 
-.builds-page__participant-icon {
+.player-page__participant-icon {
   width: 20px;
   height: 20px;
   border-radius: 3px;
@@ -744,7 +744,7 @@ onMounted(() => {
   display: block;
 }
 
-.builds-page__participant-name {
+.player-page__participant-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -753,67 +753,72 @@ onMounted(() => {
   letter-spacing: 0.02em;
 }
 
-.builds-page__participant-kda {
+.player-page__participant-kda {
   font-size: 10px;
   color: var(--fg-dim);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
-.builds-page__participant:hover .builds-page__participant-kda,
-.builds-page__participant--target .builds-page__participant-kda {
+.player-page__participant:hover .player-page__participant-kda,
+.player-page__participant--target .player-page__participant-kda {
   color: inherit;
 }
 
 @media (max-width: 640px) {
-  .builds-page__title {
-    font-size: 32px;
+  .player-page__title {
+    font-size: 28px;
   }
 
-  .builds-page__champ-icon {
+  .player-page__avatar {
     width: 64px;
     height: 64px;
   }
 
-  .builds-page__match {
-    padding: 10px 12px;
-  }
-
-  .builds-page__match-summary {
+  .player-page__match-summary {
     flex-wrap: wrap;
     gap: 10px;
   }
 
-  .builds-page__match-cs {
+  .player-page__match {
+    padding: 10px 12px;
+  }
+
+  .player-page__match-cs {
     display: none;
   }
 
-  .builds-page__match-date {
+  .player-page__match-champion {
+    width: 32px;
+    height: 32px;
+  }
+
+  .player-page__match-date {
     width: 100%;
     text-align: right;
     margin-left: 0;
   }
 
-  .builds-page__item-slot {
+  .player-page__item-slot {
     width: 26px;
     height: 26px;
   }
 
-  .builds-page__teams {
+  .player-page__teams {
     grid-template-columns: 1fr;
     gap: 10px;
   }
 
-  .builds-page__team--enemies .builds-page__team-label {
+  .player-page__team--enemies .player-page__team-label {
     text-align: left;
   }
 
-  .builds-page__team--enemies .builds-page__participant {
+  .player-page__team--enemies .player-page__participant {
     flex-direction: row;
     text-align: left;
   }
 
-  .builds-page__participant-name {
+  .player-page__participant-name {
     font-size: 12px;
   }
 }

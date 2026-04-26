@@ -73,6 +73,8 @@
       <span class="home-page__marquee-track">{{ marqueeText }}</span>
     </div>
 
+    <LiveOtpFeed />
+
     <section class="home-page__stats">
       <div class="home-page__stat stick home-page__stat--tilt-1">
         <span class="mono home-page__stat-kicker">
@@ -169,6 +171,7 @@ import { computed } from 'vue'
 import { DDRAGON_VERSION, getChampionImageUrl } from '~/src/shared/config'
 import { CHAMPIONS, championDisplayName } from '~/src/entities/champion'
 import { SearchAutocomplete } from '~/src/widgets/search-autocomplete'
+import { LiveOtpFeed } from '~/src/widgets/live-otp-feed'
 import { useI18n } from '#imports'
 
 const { t, locale } = useI18n()

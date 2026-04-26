@@ -10,6 +10,8 @@ import type {
   ChampionPlayersResponse,
   ChampionPlayersGlobalResponse,
   PlayerChampionMatchesResponse,
+  PlayerMatchesResponse,
+  LiveOtpFeedResponse,
 } from './riot'
 import type { RegionCode } from '~/src/shared/config'
 
@@ -132,16 +134,29 @@ export const api = {
       })
     },
 
+    // No `limit` by default — the backend returns every qualifying
+    // player (15% play-rate floor + Master+ already bounds the set).
+    // Pass an explicit number to cap it; backend clamps to [1, 1000].
     global(
       champion: string,
-      limit = 100,
+      limit?: number,
     ): Promise<ChampionPlayersGlobalResponse> {
       return request<ChampionPlayersGlobalResponse>(
         '/api/riot/champion-players/global',
         {
-          query: { champion, limit },
+          query: limit !== undefined ? { champion, limit } : { champion },
         },
       )
+    },
+  },
+
+  liveOtpFeed: {
+    // Default limit on the backend is 20; pass a number to override.
+    // Backend clamps to [1, 100].
+    list(limit?: number): Promise<LiveOtpFeedResponse> {
+      return request<LiveOtpFeedResponse>('/api/riot/live-otp-feed', {
+        query: limit !== undefined ? { limit } : {},
+      })
     },
   },
 
@@ -158,6 +173,19 @@ export const api = {
           timeout: 30_000,
         },
       )
+    },
+  },
+
+  // Champion-agnostic match history: the 20 most recent ranked solo
+  // matches for a puuid across all champions, with account-level
+  // header fields (profile icon, tier/rank/lp) hoisted to the top of
+  // the response.
+  player: {
+    matches(puuid: string, region: string): Promise<PlayerMatchesResponse> {
+      return request<PlayerMatchesResponse>('/api/riot/player-matches', {
+        query: { puuid, region },
+        timeout: 30_000,
+      })
     },
   },
 }

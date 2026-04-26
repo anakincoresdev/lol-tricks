@@ -14,6 +14,12 @@ export type {
   ChampionPlayerGlobal,
   ChampionPlayersGlobalResponse,
   PlayerQuality,
+  MatchParticipantSummary,
   PlayerChampionMatch,
   PlayerChampionMatchesResponse,
+  PlayerMatch,
+  PlayerMatchesResponse,
+  LiveOtpFeedPlayer,
+  LiveOtpFeedMatch,
+  LiveOtpFeedResponse,
 } from './riot'

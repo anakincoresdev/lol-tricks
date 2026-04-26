@@ -76,7 +76,7 @@ export const ru: Messages = {
     titleLine2: 'OTP-мейнов',
     titleLine3: 'по чемпионам.',
     subcopy:
-      'Топ-100 игроков на каждого чемпиона со всех серверов — сортировка по мастерству, играм и винрейту.',
+      'Все OTP-игроки на каждого чемпиона со всех серверов — сортировка по мастерству, играм и винрейту.',
     searchHint: '// ПОИСК НА РУССКОМ ИЛИ АНГЛИЙСКОМ',
     popularLabel: '// ЧАСТО СМОТРЯТ',
     marquee: {
@@ -108,12 +108,26 @@ export const ru: Messages = {
       step2Kicker: '02 · РАНЖИРОВАНИЕ',
       step2Title: 'Глобальный топ',
       step2Body:
-        'Топ-100 считается по мастерству, недавним играм и весу LP — без фильтра по региону.',
+        'Рейтинг считается по мастерству, недавним играм и весу LP — без фильтра по региону.',
       step3Kicker: '03 · ДЕТАЛИ',
       step3Title: 'По игроку',
       step3Body:
         'Клик по строке открывает порядок предметов, руны, винрейты в матчапах и стрики.',
     },
+  },
+
+  liveOtpFeed: {
+    kicker: '// LIVE',
+    title: 'Только что сыграли OTP Master+',
+    subtitle:
+      'Самые свежие ранкед-матчи отслеживаемых ваншотеров на EUW, NA и KR.',
+    loading: 'Грузим последние игры…',
+    error: 'Не удалось загрузить ленту. Обнови страницу.',
+    empty: 'В окне нет свежих игр. Загляни через пару минут.',
+    win: 'В',
+    loss: 'П',
+    kdaLabel: 'KDA',
+    wrTooltip: '{games} игр на чемпе · {share}% play rate (60д)',
   },
 
   searchAutocomplete: {
@@ -171,7 +185,7 @@ export const ru: Messages = {
     backToSearch: '← Назад к поиску',
     heroKicker: 'ONE-TRICK INDEX · {role}',
     chips: {
-      scope: 'ТОП-100 · ГЛОБАЛЬНО · 60Д',
+      scope: 'ГЛОБАЛЬНО · 60Д',
       avgWr: 'СРЕД. WR НА ЧЕМПЕ {value}%',
       avgGames: 'СРЕД. ИГР НА ЧЕМПЕ {value}',
     },
@@ -195,10 +209,16 @@ export const ru: Messages = {
         rank: 'Ранг',
         games: 'Игры',
         gamesTitle: 'Игры на чемпе за 60 дней',
+        kda: 'KDA',
+        kdaTitle: 'Средние убийства / смерти / ассисты за 60 дней',
+        runes: 'R',
+        runesTitle: 'Самый частый кейстоун за 60 дней',
+        firstItem: 'F',
+        firstItemTitle: 'Самый частый первый легендарный предмет за 60 дней',
         wr: 'WR',
         wrTitle: 'Винрейт на чемпе за 60 дней',
-        pool: 'Пул',
-        poolTitle: 'Доля игр на чемпе от общего пула',
+        pool: 'Play Rate',
+        poolTitle: 'Доля чемпа в последних 60 днях ranked solo у игрока',
         kind: 'Тип',
       },
     },
@@ -211,12 +231,8 @@ export const ru: Messages = {
     quality: {
       main: 'Main',
       regular: 'Regular',
-      casual: 'Casual',
-      trial: 'Trial',
-      mainTip: '≥30 игр в ranked solo за 60 дней, ≥20% пула, WR > 50%',
-      regularTip: '≥10 игр, ≥10% пула, WR > 50%',
-      casualTip: '≥5 игр на чемпе (любая доля и WR)',
-      trialTip: '2–4 игры на чемпе — фолбэк для редких пиков',
+      mainTip: '≥30 игр на чемпе за 60 дней, ≥20% play rate',
+      regularTip: '>10 игр на чемпе, ≥15% play rate',
     },
   },
 
@@ -236,6 +252,32 @@ export const ru: Messages = {
       today: 'Сегодня',
       yesterday: 'Вчера',
       daysAgo: '{days} дн. назад',
+    },
+    teams: {
+      allies: 'Ваша команда',
+      enemies: 'Противники',
+    },
+  },
+
+  player: {
+    backHome: '← На главную',
+    subtitle: 'Последние матчи ranked solo — {region}',
+    loading: 'Загружаем матчи...',
+    loadingHint: 'Получаем последние 20 ранкед-игр',
+    foundMatches: 'Последние {count} матчей',
+    kdaLabel: 'KDA',
+    perfect: 'Perfect',
+    defaultPlayerName: 'Игрок',
+    emptyNoMatches: 'Нет недавних ранкед-матчей.',
+    emptyHint: 'Игрок давно не играл в ranked solo.',
+    date: {
+      today: 'Сегодня',
+      yesterday: 'Вчера',
+      daysAgo: '{days} дн. назад',
+    },
+    teams: {
+      allies: 'Ваша команда',
+      enemies: 'Противники',
     },
   },
 

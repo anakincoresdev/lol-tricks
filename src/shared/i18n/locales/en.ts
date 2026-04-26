@@ -82,7 +82,7 @@ export const en = {
     titleLine2: 'from OTP mains',
     titleLine3: 'by champion.',
     subcopy:
-      'Top-100 players for every champion across all servers — sort by mastery, games, and win rate.',
+      'Every OTP player for every champion across all servers — sort by mastery, games, and win rate.',
     searchHint: '// SEARCH IN ENGLISH OR RUSSIAN',
     popularLabel: '// OFTEN VIEWED',
     marquee: {
@@ -114,12 +114,26 @@ export const en = {
       step2Kicker: '02 · RANKING',
       step2Title: 'Global top',
       step2Body:
-        'Top-100 is computed from mastery, recent games, and LP weight — no region filter.',
+        'The ranking is computed from mastery, recent games, and LP weight — no region filter.',
       step3Kicker: '03 · DETAILS',
       step3Title: 'By player',
       step3Body:
         'Click a row to open item order, runes, matchup win rates and streaks.',
     },
+  },
+
+  liveOtpFeed: {
+    kicker: '// LIVE',
+    title: 'Just played by Master+ OTPs',
+    subtitle:
+      'The most recent ranked solo games from tracked one-tricks across EUW, NA, and KR.',
+    loading: 'Loading the latest games…',
+    error: 'Could not load the live feed. Refresh the page to retry.',
+    empty: 'No recent games in the window. Check back in a few minutes.',
+    win: 'W',
+    loss: 'L',
+    kdaLabel: 'KDA',
+    wrTooltip: '{games} games on champion · {share}% play rate (60d)',
   },
 
   searchAutocomplete: {
@@ -178,7 +192,7 @@ export const en = {
     backToSearch: '← Back to search',
     heroKicker: 'ONE-TRICK INDEX · {role}',
     chips: {
-      scope: 'TOP-100 · GLOBAL · 60D',
+      scope: 'GLOBAL · 60D',
       avgWr: 'AVG CHAMP WR {value}%',
       avgGames: 'AVG CHAMP GAMES {value}',
     },
@@ -202,10 +216,17 @@ export const en = {
         rank: 'Rank',
         games: 'Games',
         gamesTitle: 'Games on champion over 60 days',
+        kda: 'KDA',
+        kdaTitle: 'Average kills / deaths / assists over 60 days',
+        runes: 'R',
+        runesTitle: 'Most-played keystone over 60 days',
+        firstItem: 'F',
+        firstItemTitle: 'Most-played first legendary item over 60 days',
         wr: 'WR',
         wrTitle: 'Win rate on champion over 60 days',
-        pool: 'Pool',
-        poolTitle: 'Share of champion games out of total pool',
+        pool: 'Play Rate',
+        poolTitle:
+          "Share of this champion in the player's last 60 days of ranked solo",
         kind: 'Kind',
       },
     },
@@ -218,12 +239,8 @@ export const en = {
     quality: {
       main: 'Main',
       regular: 'Regular',
-      casual: 'Casual',
-      trial: 'Trial',
-      mainTip: '≥30 ranked solo games in 60 days, ≥20% of pool, WR > 50%',
-      regularTip: '≥10 games, ≥10% of pool, WR > 50%',
-      casualTip: '≥5 games on champion (any share and WR)',
-      trialTip: '2–4 games on champion — fallback for rare picks',
+      mainTip: '≥30 games on champion in 60 days, ≥20% play rate',
+      regularTip: '>10 games on champion, ≥15% play rate',
     },
   },
 
@@ -243,6 +260,32 @@ export const en = {
       today: 'Today',
       yesterday: 'Yesterday',
       daysAgo: '{days}d ago',
+    },
+    teams: {
+      allies: 'Your team',
+      enemies: 'Enemy team',
+    },
+  },
+
+  player: {
+    backHome: '← Back home',
+    subtitle: 'Recent ranked solo — {region}',
+    loading: 'Loading matches...',
+    loadingHint: 'Pulling the last 20 ranked games',
+    foundMatches: 'Last {count} matches',
+    kdaLabel: 'KDA',
+    perfect: 'Perfect',
+    defaultPlayerName: 'Player',
+    emptyNoMatches: 'No recent ranked matches.',
+    emptyHint: "This player hasn't played ranked solo in a while.",
+    date: {
+      today: 'Today',
+      yesterday: 'Yesterday',
+      daysAgo: '{days}d ago',
+    },
+    teams: {
+      allies: 'Your team',
+      enemies: 'Enemy team',
     },
   },
 

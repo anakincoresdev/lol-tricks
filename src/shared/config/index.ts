@@ -13,11 +13,17 @@ export type { RoleId } from './roles'
 export {
   DDRAGON_VERSION,
   DDRAGON_BASE,
+  DDRAGON_IMG_BASE,
   getChampionImageUrl,
   getChampionSplashUrl,
   getChampionLoadingUrl,
   getItemImageUrl,
+  getProfileIconUrl,
   getRankedEmblemUrl,
-  getKeystoneIconUrl,
-  getRuneStyleIconUrl,
+  getRuneAssetUrl,
+  loadItemsMap,
+  loadRunesMap,
+  resolveItemInfo,
+  resolveRuneIconUrl,
 } from './ddragon'
+export type { ItemInfo } from './ddragon'

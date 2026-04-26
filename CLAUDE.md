@@ -53,7 +53,7 @@ All Riot Games API calls go through the external **lol-tricks-api** backend — 
 
 Prefer the typed `api` facade from `src/shared/api/client.ts` (`api.championPlayers.global`, `api.otp.list`, `api.playerMatches.get`, …) over raw `$fetch`. The facade centralises timeout, a single retry on 5xx/network failures, and normalised `ApiError`. `buildApiUrl()` is still exported for one-off cases and throws if `apiBase` is empty.
 
-The champion page uses `GET /api/riot/champion-players/global?champion=X&limit=100` — backend returns top-100 Master+ players across all tracked regions (currently EUW/NA/KR) with `qualityMix` (main/regular/casual/trial) and per-champion stats (`championGames`, `championWinRate`, `championShare`, `roles`). Region and role tabs filter the response client-side — switching tabs does not refetch.
+The champion page uses `GET /api/riot/champion-players/global?champion=X` — backend returns every qualifying Master+ player across all tracked regions (currently EUW/NA/KR) with `qualityMix` (main/regular) and per-champion stats (`championGames`, `championWinRate`, `championShare`, `roles`). Selection is a uniform hard filter: Master+ rank, >10 games on champion in the 60d window, ≥15% play rate, WR > 50%. Quality is a soft label on top: `main` = ≥30 games AND ≥20% play rate (hard OTP), `regular` = everyone else that passes the filter. The filter alone bounds the result to a few hundred rows, so no hard row cap is applied (pass `?limit=N` only if a client wants a short list). Region and role tabs filter the response client-side — switching tabs does not refetch.
 
 ## Code Style
 

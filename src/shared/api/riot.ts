@@ -84,18 +84,40 @@ export interface ChampionPlayersMultiResponse {
 }
 
 // --- /api/riot/champion-players/global ---------------------------------
-// Global (cross-region) top-100 from backend DB. No region param — the
-// endpoint returns the best Master+ players on a champion across all
-// tracked regions (currently euw/na/kr), sorted by quality tier then
-// by LP DESC. Region filter is applied client-side if needed.
+// Global (cross-region) OTP leaderboard from the backend DB. No region
+// param — the endpoint returns every qualifying Master+ player on a
+// champion across all tracked regions (currently euw/na/kr), sorted by
+// quality tier then by LP DESC. Region filter is applied client-side.
 //
-// Quality tiers (see lol-tricks-api/src/routes/champion-players-global.ts):
-//   main    — ≥30 games in 60d window, ≥20% share, WR > 50%
-//   regular — ≥10 games,               ≥10% share, WR > 50%
-//   casual  — ≥5 games,                any share, any WR
-//   trial   — 2-4 games (fallback for off-meta champs)
+// Selection is a uniform hard filter (all must hold): Master+ rank,
+// >10 games on champion in the 60d window, play rate ≥ 15%, WR > 50%.
+// The filter alone bounds the result set to at most a few hundred
+// rows per champion, so no hard row cap is applied.
+//
+// Quality is a soft label on top of the hard filter
+// (see lol-tricks-api/src/routes/champion-players-global.ts):
+//   main    — ≥30 games AND ≥20% play rate (hard OTP)
+//   regular — passes the hard filter but below the "main" bar
 
-export type PlayerQuality = 'main' | 'regular' | 'casual' | 'trial'
+export type PlayerQuality = 'main' | 'regular'
+
+// Most-played keystone + secondary rune tree for a player × champion
+// across the 60d window. Backend returns null for both fields when the
+// champion has no valid rune data in the window.
+export interface ChampionPlayerRunes {
+  keystone: number
+  secondaryStyle: number
+}
+
+// Average KDA (one decimal) across the player's champion games in the
+// 60d window. Null when the player has zero games on the champion
+// (should not happen in practice, since the SQL filter already requires
+// championGames ≥ 2).
+export interface ChampionPlayerKda {
+  kills: number
+  deaths: number
+  assists: number
+}
 
 export interface ChampionPlayerGlobal {
   puuid: string
@@ -104,6 +126,9 @@ export interface ChampionPlayerGlobal {
   tier: string
   rank: string
   lp: number
+  // Riot profile icon id, null when seed-masters hasn't backfilled the
+  // player yet. Frontend falls back to a neutral placeholder in that case.
+  profileIconId: number | null
   totalGames: number
   championGames: number
   championWins: number
@@ -118,6 +143,14 @@ export interface ChampionPlayerGlobal {
     adc: number
     support: number
   }
+  runes: ChampionPlayerRunes | null
+  kda: ChampionPlayerKda | null
+  // Most-played first legendary item id across the player's champion
+  // games in the 60d window. Null when the timeline backfill
+  // (ops/backfill-timeline.cjs on the backend) hasn't landed a value
+  // for any of the player's games yet — the frontend renders a neutral
+  // placeholder in that case.
+  firstItem: number | null
 }
 
 export interface ChampionPlayersGlobalResponse {
@@ -125,6 +158,66 @@ export interface ChampionPlayersGlobalResponse {
   window: string
   qualityMix: Partial<Record<PlayerQuality, number>>
   players: ChampionPlayerGlobal[]
+}
+
+// --- /api/riot/live-otp-feed ------------------------------------------
+// Home-page "live feed": the N most recent ranked solo matches played
+// by a qualifying Master+ OTP on their OTP-champion. One row per
+// (match × player) — so a game with two tracked OTPs can appear twice
+// under different championName/player pairs. `gameCreation` is a Unix
+// millisecond epoch so the client can feed it straight into
+// `Intl.RelativeTimeFormat` for "5 minutes ago" rendering.
+
+export interface LiveOtpFeedPlayer {
+  puuid: string
+  gameName: string
+  tier: string
+  rank: string
+  lp: number
+  profileIconId: number | null
+  // Context for hover tooltips: "this player has X games on this champ,
+  // Y% WR, Z% play rate" — all ints, percentages 0..100.
+  championGames: number
+  championWinRate: number
+  championShare: number
+}
+
+export interface LiveOtpFeedMatch {
+  matchId: string
+  region: string
+  gameCreation: number
+  gameDuration: number
+  championName: string
+  kills: number
+  deaths: number
+  assists: number
+  win: boolean
+  player: LiveOtpFeedPlayer
+}
+
+export interface LiveOtpFeedResponse {
+  window: string
+  limit: number
+  matches: LiveOtpFeedMatch[]
+}
+
+// A single participant in a match — the backend attaches all 10 of
+// these to each `PlayerChampionMatch` so the client can render the
+// full roster (allies + enemies) without additional requests. The team
+// split is derived from the `win` flag compared to the target player.
+export interface MatchParticipantSummary {
+  puuid: string
+  // Display name formatted as `riotIdGameName#tagLine` when both are
+  // present, otherwise falls back to the legacy summoner name. May be
+  // 'Unknown' for very old matches with missing identity fields.
+  gameName: string
+  championName: string
+  kills: number
+  deaths: number
+  assists: number
+  cs: number
+  position: string
+  win: boolean
 }
 
 export interface PlayerChampionMatch {
@@ -141,6 +234,9 @@ export interface PlayerChampionMatch {
   gameDuration: number
   gameCreation: number
   position: string
+  // All 10 players in the match (5 allies + 5 enemies from the target
+  // player's perspective). Includes the target player themselves.
+  participants: MatchParticipantSummary[]
 }
 
 export interface PlayerChampionMatchesResponse {
@@ -151,6 +247,45 @@ export interface PlayerChampionMatchesResponse {
   masteryPoints: number
   masteryLevel: number
   matches: PlayerChampionMatch[]
+}
+
+// --- /api/riot/player-matches -----------------------------------------
+// All-champion match history for a single puuid. Same per-match shape
+// as `PlayerChampionMatch` except `championName` is now a property of
+// the match row itself (since the player was presumably on different
+// champs across the window). Account-level fields (gameName, profile
+// icon, tier/rank/lp) are hoisted to the response so the page header
+// can render before the match list is ready.
+export interface PlayerMatch {
+  matchId: string
+  championName: string
+  win: boolean
+  kills: number
+  deaths: number
+  assists: number
+  items: number[]
+  runes: { style: number; runes: number[] }[]
+  summoner1Id: number
+  summoner2Id: number
+  cs: number
+  gameDuration: number
+  gameCreation: number
+  position: string
+  participants: MatchParticipantSummary[]
+}
+
+export interface PlayerMatchesResponse {
+  puuid: string
+  region: string
+  gameName: string
+  profileIconId: number | null
+  // Backend returns null for any of tier/rank/lp when the player is
+  // not tracked in the DB and the league-v4 fallback failed or turned
+  // up no solo-queue entry.
+  tier: string | null
+  rank: string | null
+  lp: number | null
+  matches: PlayerMatch[]
 }
 
 /**
