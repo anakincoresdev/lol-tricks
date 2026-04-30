@@ -292,10 +292,10 @@ export interface PlayerMatchesResponse {
  * Build a full URL to the lol-tricks-api backend.
  *
  * `apiBase` comes from `runtimeConfig.public.apiBase` (env
- * `NUXT_PUBLIC_API_BASE`). `nuxt.config.ts` pins a prod default so that
- * Vercel builds work with no env vars set; override with
- * `NUXT_PUBLIC_API_BASE=http://localhost:3001` for local dev against
- * the backend running on port 3001.
+ * `NUXT_PUBLIC_API_BASE`) and should be the backend origin only, without
+ * the `/api` prefix. `nuxt.config.ts` pins a prod default so builds work
+ * with no env vars set; override with `NUXT_PUBLIC_API_BASE=http://localhost:3001`
+ * for local dev against the backend running on port 3001.
  *
  * Throws if the base is empty — we'd rather fail loudly on boot than
  * quietly issue requests to `/` and watch SSR 404 for every call.

@@ -37,7 +37,7 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     env:
-      NUXT_PUBLIC_API_BASE: https://lol-tricks.com/api
+      NUXT_PUBLIC_API_BASE: https://lol-tricks.com
     steps:
       - name: Checkout
         uses: actions/checkout@v4
