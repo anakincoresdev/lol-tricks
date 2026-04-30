@@ -71,6 +71,14 @@ jobs:
           : "${VPS_HOST:?Missing VPS_HOST secret}"
           : "${VPS_USER:?Missing VPS_USER secret}"
           : "${VPS_SSH_KEY:?Missing VPS_SSH_KEY secret}"
+          VPS_HOST="${VPS_HOST#ssh://}"
+          VPS_HOST="${VPS_HOST#*@}"
+          VPS_HOST="${VPS_HOST%%/*}"
+          if [[ "$VPS_HOST" == *:* ]]; then
+            HOST_PORT="${VPS_HOST##*:}"
+            VPS_HOST="${VPS_HOST%%:*}"
+            VPS_PORT="${VPS_PORT:-$HOST_PORT}"
+          fi
           VPS_PORT="${VPS_PORT:-22}"
           mkdir -p ~/.ssh
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
