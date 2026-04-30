@@ -71,7 +71,18 @@ jobs:
           : "${VPS_HOST:?Missing VPS_HOST secret}"
           : "${VPS_USER:?Missing VPS_USER secret}"
           : "${VPS_SSH_KEY:?Missing VPS_SSH_KEY secret}"
-          VPS_HOST="${VPS_HOST#ssh://}"
+          VPS_HOST="$(printf '%s' "$VPS_HOST" | tr -d '[:space:]')"
+          VPS_USER="$(printf '%s' "$VPS_USER" | tr -d '[:space:]')"
+          VPS_PORT="$(printf '%s' "${VPS_PORT:-}" | tr -d '[:space:]')"
+          VPS_HOST="${VPS_HOST#*://}"
+          if [[ "$VPS_HOST" == *@* ]]; then
+            HOST_USER="${VPS_HOST%%@*}"
+            VPS_HOST="${VPS_HOST#*@}"
+            VPS_USER="${VPS_USER:-$HOST_USER}"
+          fi
+          if [[ "$VPS_USER" == *@* ]]; then
+            VPS_USER="${VPS_USER%%@*}"
+          fi
           VPS_HOST="${VPS_HOST#*@}"
           VPS_HOST="${VPS_HOST%%/*}"
           if [[ "$VPS_HOST" == *:* ]]; then
@@ -84,4 +95,4 @@ jobs:
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p "$VPS_PORT" -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "sudo /usr/local/sbin/deploy-lol-tricks '$DEPLOY_BRANCH'"
+          ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" -l "$VPS_USER" "$VPS_HOST" "sudo /usr/local/sbin/deploy-lol-tricks '$DEPLOY_BRANCH'"
