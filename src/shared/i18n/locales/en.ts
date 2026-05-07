@@ -95,16 +95,6 @@ export const en = {
       updates: 'refresh every 3 minutes',
       source: 'data from riot api',
     },
-    stats: {
-      players: 'PLAYERS IN DB',
-      playersLabel: 'across all servers',
-      servers: 'SERVERS',
-      serversLabel: 'from NA to KR',
-      champions: 'CHAMPIONS',
-      championsLabel: 'in the index',
-      update: 'REFRESH',
-      updateLabel: 'between updates',
-    },
     how: {
       title: 'How the index works',
       step1Kicker: '01 · SEARCH',

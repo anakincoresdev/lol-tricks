@@ -89,16 +89,6 @@ export const ru: Messages = {
       updates: 'обновление каждые 3 минуты',
       source: 'данные из riot api',
     },
-    stats: {
-      players: 'ИГРОКОВ В БАЗЕ',
-      playersLabel: 'со всех серверов',
-      servers: 'СЕРВЕРОВ',
-      serversLabel: 'от NA до KR',
-      champions: 'ЧЕМПИОНОВ',
-      championsLabel: 'в индексе',
-      update: 'АПДЕЙТ',
-      updateLabel: 'между обновлениями',
-    },
     how: {
       title: 'Как устроен индекс',
       step1Kicker: '01 · ПОИСК',

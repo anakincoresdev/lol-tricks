@@ -75,53 +75,6 @@
 
     <LiveOtpFeed />
 
-    <section class="home-page__stats">
-      <div class="home-page__stat stick home-page__stat--tilt-1">
-        <span class="mono home-page__stat-kicker">
-          {{ t('home.stats.players') }}
-        </span>
-        <span class="big-num home-page__stat-num home-page__stat-num--acid">
-          1.2M
-        </span>
-        <span class="home-page__stat-label">
-          {{ t('home.stats.playersLabel') }}
-        </span>
-      </div>
-      <div class="home-page__stat stick home-page__stat--tilt-2">
-        <span class="mono home-page__stat-kicker">
-          {{ t('home.stats.servers') }}
-        </span>
-        <span class="big-num home-page__stat-num home-page__stat-num--cyan">
-          12
-        </span>
-        <span class="home-page__stat-label">
-          {{ t('home.stats.serversLabel') }}
-        </span>
-      </div>
-      <div class="home-page__stat stick home-page__stat--tilt-3">
-        <span class="mono home-page__stat-kicker">
-          {{ t('home.stats.champions') }}
-        </span>
-        <span class="big-num home-page__stat-num home-page__stat-num--mag">
-          168
-        </span>
-        <span class="home-page__stat-label">
-          {{ t('home.stats.championsLabel') }}
-        </span>
-      </div>
-      <div class="home-page__stat stick home-page__stat--tilt-1">
-        <span class="mono home-page__stat-kicker">
-          {{ t('home.stats.update') }}
-        </span>
-        <span class="big-num home-page__stat-num home-page__stat-num--acid">
-          3m
-        </span>
-        <span class="home-page__stat-label">
-          {{ t('home.stats.updateLabel') }}
-        </span>
-      </div>
-    </section>
-
     <section class="home-page__how">
       <h2 class="home-page__how-title display">
         {{ t('home.how.title') }}
@@ -483,61 +436,6 @@ const marqueeText = computed(() => {
   }
 }
 
-.home-page__stats {
-  position: relative;
-  z-index: 1;
-  max-width: 1400px;
-  margin: 40px auto;
-  padding: 0 24px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.home-page__stat {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border-radius: 6px;
-}
-
-.home-page__stat--tilt-1 {
-  transform: rotate(-2deg);
-}
-.home-page__stat--tilt-2 {
-  transform: rotate(1.5deg);
-}
-.home-page__stat--tilt-3 {
-  transform: rotate(-0.8deg);
-}
-
-.home-page__stat-kicker {
-  font-size: 10px;
-  color: var(--fg-dim);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.home-page__stat-num {
-  font-size: 56px;
-}
-
-.home-page__stat-num--acid {
-  color: var(--acid);
-}
-.home-page__stat-num--cyan {
-  color: var(--cyan);
-}
-.home-page__stat-num--mag {
-  color: var(--mag);
-}
-
-.home-page__stat-label {
-  font-size: 13px;
-  color: var(--fg-dim);
-}
-
 .home-page__how {
   position: relative;
   z-index: 1;
@@ -596,10 +494,6 @@ const marqueeText = computed(() => {
 
   .home-page__subcopy {
     font-size: 16px;
-  }
-
-  .home-page__stat-num {
-    font-size: 44px;
   }
 
   .home-page__how-title {
